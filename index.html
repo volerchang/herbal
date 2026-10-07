@@ -186,6 +186,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   <span id="saveStatus" aria-live="polite"></span>
   <button type="button" class="save" id="saveBtn">儲存變更</button>
   <button type="button" id="discardBtn">放棄變更</button>
+  <button type="button" id="exportBtn">匯出 HTML</button>
   <button type="button" id="lockBtn">鎖定並返回總覽</button>
 </div>
 
@@ -377,7 +378,11 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 </div>
 </div>
 
-<script>
+<script id="app">
+const SEED=/*SEED*/null/*END*/;
+const PAGE_SRC=(()=>{ try{ const c=document.documentElement.cloneNode(true);
+  c.querySelectorAll('script').forEach(s=>{ if(s.id!=='app') s.remove(); });
+  return '<!DOCTYPE html>\n'+c.outerHTML; }catch(e){ return ''; } })();
 const DEFAULTS = {
   perBox:10, loss:0,
   phN:2, phHr:4, phRate:450,
@@ -395,6 +400,9 @@ const COLORS=['#2E5A47','#6E9A88','#B5832E','#E3BC72','#5D7D9A','#C77E86','#C451
 const NAMES=['藥師人力','水電費','藥材','加工粗碎','包裝茶包','照射 Gamma','外包裝包材','外包裝貼紙'];
 let state;
 function load(){
+  if(SEED){ try{ const cur=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(!cur || n(SEED.savedAt)>n(cur.savedAt)) localStorage.setItem(KEY,JSON.stringify(SEED)); }catch(e){} }
+  if(SEED){ try{ if(!localStorage.getItem(KEY)) { state=Object.assign(structuredClone(DEFAULTS),clone(SEED)); return; } }catch(e){ state=Object.assign(structuredClone(DEFAULTS),clone(SEED)); return; } }
   try{if(!localStorage.getItem(KEY)){const o3=localStorage.getItem('teabag-cost-v3'); if(o3){const v=JSON.parse(o3);
       const st=structuredClone(DEFAULTS); Object.keys(v).forEach(k=>{if(!['products','prices','fees'].includes(k)) st[k]=v[k];});
       (v.products||[]).forEach(op=>{const np=st.products.find(x=>x.name===op.name); if(np){np.bags=op.bags; np.sale=op.sale;}});
@@ -654,6 +662,24 @@ $('navAdmin').addEventListener('click',()=>{ if(document.body.classList.contains
 $('navFront').addEventListener('click',()=>{ if(document.body.classList.contains('mode-admin')&&!leaveAdmin()) return; setMode('front'); });
 $('lockBtn').addEventListener('click',()=>{ if(!leaveAdmin()) return; unlocked=false; setMode('front'); });
 $('saveBtn').addEventListener('click',commit);
+async function exportHtml(){
+  if(isDirty()){ if(!confirm('尚有未儲存的變更。\n按「確定」先儲存再匯出；按「取消」則不匯出。')) return; commit(); }
+  if(!PAGE_SRC){ alert('此瀏覽器無法匯出，請改用 Chrome 或 Edge。'); return; }
+  const seed=clone(committed); delete seed.active;
+  const json=JSON.stringify(seed).replace(/</g,'\\u003c').replace(/\*\//g,'*\\/');
+  const html=PAGE_SRC.replace(/\/\*SEED\*\/[\s\S]*?\/\*END\*\//,'/*SEED*/'+json+'/*END*/');
+  const d=new Date(), z=x=>String(x).padStart(2,'0');
+  const filename=`四項茶飲成本計算器_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}.html`;
+  if(window.claude&&typeof claude.use==='function'){
+    try{ const dl=await claude.use('downloads');
+      if(dl){ try{ await dl.save({filename,data:html}); updateDirty('已匯出 HTML（含目前儲存的資料）。'); }
+        catch(e){ if(e&&e.code!=='declined') updateDirty('匯出失敗：'+(e&&e.message||'請稍後再試')); } return; } }catch(e){}
+  }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})); a.download=filename;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+  updateDirty('已匯出 HTML（含目前儲存的資料）。');
+}
+$('exportBtn').addEventListener('click',exportHtml);
 $('gShare').addEventListener('change',e=>{state.gShare=e.target.checked; save(); calcAll();});
 $('discardBtn').addEventListener('click',()=>{ if(confirm('確定放棄所有未儲存的變更，回到上次儲存的數值？')) discard(); });
 window.addEventListener('beforeunload',e=>{ if(isDirty()){ e.preventDefault(); e.returnValue=''; } });

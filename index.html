@@ -153,6 +153,9 @@ dialog .err{color:#B3432F;min-height:1.4em;margin:8px 0 0;font-size:13px}
 dialog .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
 dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(--bg);font-weight:700}
 .ro input:disabled{opacity:1;background:transparent;border-color:transparent;padding-left:0}
+.site-foot{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:13px;line-height:1.8}
+.site-foot p{margin:0}
+.site-foot .ico{width:16px;height:16px;margin-right:6px;vertical-align:-3px;opacity:.85}
 @media print{.nav,.adminbar{display:none}aside{position:static}.tools,.row-actions,button.del{display:none}}
 </style>
 </head>
@@ -376,6 +379,10 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   </div>
 </aside>
 </div>
+<footer class="site-foot">
+  <p><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg>製作：CC Chang</p>
+  <p>© 2026.10 All Rights Reserved</p>
+</footer>
 </div>
 
 <script id="app">

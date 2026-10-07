@@ -221,7 +221,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   <section class="item front-only">
     <h2><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg><span id="fHerbTitle">配方與藥材成本</span></h2>
     <div class="tablewrap"><table style="min-width:560px">
-      <thead><tr><th>藥材</th><th>碎料商</th><th style="text-align:right">每包克數</th><th style="text-align:right">藥材單價／台斤</th><th style="text-align:right">加工費／台斤</th><th style="text-align:right">藥材＋加工／包</th></tr></thead>
+      <thead><tr><th>藥材</th><th style="text-align:right">每包克數</th><th style="text-align:right">藥材單價／台斤</th><th style="text-align:right">藥材單價／克</th><th style="text-align:right">藥材成本／包</th></tr></thead>
       <tbody id="fHerbs"></tbody>
     </table></div>
   </section>
@@ -230,7 +230,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
     <div class="fields">
       <label>本產品一批生產（包）<input type="number" id="bags" min="1" step="1"></label>
       <label>每袋外包裝裝入（包）<input type="number" id="perBox" min="1" step="1"></label>
-      <label>藥材損耗率（%）<input type="number" id="loss" min="0" max="90" step="0.5"></label>
+      <label>藥材損耗率（%，預設 0 不計）<input type="number" id="loss" min="0" max="90" step="0.5"></label>
     </div>
     <p class="note" id="batchNote"></p>
   </section>
@@ -263,8 +263,8 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
       <select id="priceUnit"><option value="kg">元／公斤</option><option value="jin">元／台斤（600 g）</option></select>
     </div>
     <div class="tablewrap">
-      <table>
-        <thead><tr><th>藥材名稱</th><th>碎料商</th><th>每包克數（g）</th><th class="c">烘</th><th class="c">碎</th><th id="priceHead">藥材單價（元／公斤）</th><th id="feeHead">加工費（元／公斤）</th><th style="text-align:right">本批採購量</th><th style="text-align:right">藥材小計</th><th style="text-align:right">加工小計</th><th></th></tr></thead>
+      <table style="min-width:640px">
+        <thead><tr><th>藥材名稱</th><th>每包克數（g）</th><th id="priceHead">藥材單價（元／台斤）</th><th style="text-align:right">藥材單價（元／克）</th><th style="text-align:right">本批用量</th><th style="text-align:right">藥材小計</th><th></th></tr></thead>
         <tbody id="herbBody"></tbody>
       </table>
     </div>
@@ -275,6 +275,12 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 
   <section class="item admin-only">
     <h2><span class="no">4</span>加工粗碎藥材成本<span class="sub" id="s4"></span></h2>
+    <div class="tablewrap" style="margin-bottom:14px">
+      <table style="min-width:660px">
+        <thead><tr><th style="white-space:nowrap">藥材名稱</th><th>碎料商</th><th class="c">烘</th><th class="c">碎</th><th id="feeHead">加工費（元／台斤）</th><th style="text-align:right">本批用量</th><th style="text-align:right">加工小計</th></tr></thead>
+        <tbody id="procBody"></tbody>
+      </table>
+    </div>
     <div class="fields">
       <label>額外粗碎費（元／公斤）<input type="number" id="grindKg" min="0" step="0.5"></label>
       <label>額外烘焙費（元／公斤）<input type="number" id="roastKg" min="0" step="0.5"></label>
@@ -295,15 +301,12 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   <section class="item admin-only">
     <h2><span class="no">6</span>照射 Gamma<span class="sub" id="s6"></span></h2>
     <div class="fields">
-      <label>計價方式
-        <select id="gMode"><option value="kg">依重量（元／公斤）</option><option value="fixed">每次固定費用</option></select>
-      </label>
-      <label>單價（元／公斤）<input type="number" id="gKg" min="0" step="0.5"></label>
-      <label>照射計價重量（公斤）<input type="number" id="gWeight" min="0" step="0.1" placeholder="空白＝藥材淨重"></label>
-      <label>最低收費（元）<input type="number" id="gMin" min="0" step="1"></label>
+      <label>每次照射上限（公斤）<input type="number" id="gCap" min="1" step="1"></label>
       <label>每次照射費用（元）<input type="number" id="gFixed" min="0" step="1"></label>
-      <label>運費（元）<input type="number" id="gShip" min="0" step="1"></label>
+      <label>運費（元／次）<input type="number" id="gShip" min="0" step="1"></label>
+      <label>照射計價重量（公斤）<input type="number" id="gWeight" min="0" step="0.1" placeholder="空白＝藥材淨重"></label>
     </div>
+    <label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px;color:var(--ink);font-size:14px"><input type="checkbox" id="gShare">四項產品合併送照，依重量分攤費用</label>
     <p class="note" id="n6"></p>
   </section>
 
@@ -376,12 +379,12 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 
 <script>
 const DEFAULTS = {
-  perBox:10, loss:5,
+  perBox:10, loss:0,
   phN:2, phHr:4, phRate:450,
   kw:1.5, kwHr:4, ePrice:7.43, water:0.5, wPrice:12, utilOther:0,
   grindKg:0, roastKg:0, grindFix:0,
   bagMat:0.5, bagLabor:1, bagFix:0,
-  gMode:'fixed', gKg:20, gWeight:'', gMin:1500, gFixed:5000, gShip:0,
+  gMode:'cap', gCap:150, gShare:false, gKg:20, gWeight:'', gMin:1500, gFixed:5000, gShip:0,
   boxPrice:8, boxLoss:2, dryN:1, dryPrice:1.2,
   stkN:1, stkPrice:1.5, stkFix:0,
   markup:30, priceUnit:'jin', active:0,
@@ -399,7 +402,7 @@ function load(){
   try{if(!localStorage.getItem(KEY)){const o=localStorage.getItem('teabag-cost-v2'); if(o){const v=JSON.parse(o);
       const keep={}; ['perBox','loss','phN','phHr','phSal','phMonthHr','phOver','kw','kwHr','ePrice','water','wPrice','utilOther','bagMat','bagLabor','bagFix','gMode','gKg','gWeight','gMin','gFixed','gShip','boxPrice','boxLoss','dryN','dryPrice','stkN','stkPrice','stkFix','markup'].forEach(k=>{if(k in v) keep[k]=v[k];});
       const st=Object.assign(structuredClone(DEFAULTS),keep); if(n(st.ePrice)===4.5) st.ePrice=7.43; localStorage.setItem(KEY,JSON.stringify(st));}}}catch(e){}
-  try{const s=localStorage.getItem(KEY); if(s){state=Object.assign(structuredClone(DEFAULTS),JSON.parse(s)); if(n(state.ePrice)===4.5) state.ePrice=7.43; if(!state.gMig5000){state.gMode='fixed';state.gFixed=5000;if(n(state.gShip)===500)state.gShip=0;state.gMig5000=true;} if(!state.dryMig){state.perBox=10;state.dryN=1;state.dryPrice=1.2;state.dryMig=true;} if(!state.saleMig){state.sale={'酸棗':500,'寬心':450,'荷風':450,'清韻':0};state.saleMig=true;} return;}}catch(e){}
+  try{const s=localStorage.getItem(KEY); if(s){state=Object.assign(structuredClone(DEFAULTS),JSON.parse(s)); if(!state.lossMig0){state.loss=0; state.lossMig0=true;} if(!state.gCapMig){state.gMode='cap'; state.gCap=150; state.gFixed=5000; state.gCapMig=true;} if(n(state.ePrice)===4.5) state.ePrice=7.43; if(!state.gMig5000){state.gMode='fixed';state.gFixed=5000;if(n(state.gShip)===500)state.gShip=0;state.gMig5000=true;} if(!state.dryMig){state.perBox=10;state.dryN=1;state.dryPrice=1.2;state.dryMig=true;} if(!state.saleMig){state.sale={'酸棗':500,'寬心':450,'荷風':450,'清韻':0};state.saleMig=true;} return;}}catch(e){}
   state=structuredClone(DEFAULTS);
 }
 let committed=null;
@@ -416,7 +419,7 @@ function updateDirty(msg){
   $('lastSaved').textContent=committed&&committed.savedAt?`資料最後更新：${fmtTime(committed.savedAt)}`:'';
 }
 function save(){ updateDirty(); }
-function refreshAll(){ FIELDS.forEach(k=>{const el=$(k); if(el) el.value=state[k];}); renderTabs(); renderHerbs(); calcAll(); updateDirty(); }
+function refreshAll(){ FIELDS.forEach(k=>{const el=$(k); if(el) el.value=state[k];}); $('gShare').checked=!!state.gShare; renderTabs(); renderHerbs(); calcAll(); updateDirty(); }
 function commit(){ state.savedAt=Date.now(); committed=clone(state); persist(); updateDirty(`已儲存（${fmtTime(committed.savedAt)}），成本總覽已更新。`); }
 function discard(){ const a=state.active; state=clone(committed); state.active=Math.min(a,state.products.length-1); refreshAll(); }
 function leaveAdmin(){
@@ -437,7 +440,7 @@ const perKg=h=>{const p=n(h.price); return state.priceUnit==='jin'?p/0.6:p;};
 const feeKg=h=>{const f=n(h.fee); return state.priceUnit==='jin'?f/0.6:f;};
 const priceSet=h=>String(h.price??'').trim()!=='';
 
-const FIELDS=Object.keys(DEFAULTS).filter(k=>!['products','prices','fees','active'].includes(k));
+const FIELDS=Object.keys(DEFAULTS).filter(k=>!['products','prices','fees','active','gShare'].includes(k));
 function bindFields(){
   FIELDS.forEach(k=>{
     const el=$(k); if(!el) return;
@@ -459,8 +462,16 @@ function renderTabs(){
 }
 function syncBags(){ if(document.activeElement!==$('bags')) $('bags').value=state.products[state.active].bags; }
 function select(i){state.active=i; save(); renderTabs(); renderHerbs(); calcAll();}
+function bindRow(tr,h){
+  tr.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
+    const k=inp.dataset.k;
+    if(k==='roast'||k==='crush') h[k]=inp.checked; else h[k]=inp.value;
+    if(k==='name'){ const i=state.products[state.active].herbs.indexOf(h); const pr=$('procBody').children[i]; if(pr) pr.querySelector('[data-out=n]').textContent=inp.value; }
+    save(); calcAll();
+  }));
+}
 function renderHerbs(){
-  const p=state.products[state.active], tb=$('herbBody'); tb.innerHTML='';
+  const p=state.products[state.active], tb=$('herbBody'), pb=$('procBody'); tb.innerHTML=''; pb.innerHTML='';
   $('pName').textContent=p.name;
   $('priceHead').textContent=state.priceUnit==='jin'?'藥材單價（元／台斤）':'藥材單價（元／公斤）';
   $('feeHead').textContent=state.priceUnit==='jin'?'加工費（元／台斤）':'加工費（元／公斤）';
@@ -468,24 +479,22 @@ function renderHerbs(){
   p.herbs.forEach((h,i)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`<td><input value="${esc(h.name)}" data-k="name" aria-label="藥材名稱"></td>
-      <td><input value="${esc(h.sup??'')}" data-k="sup" placeholder="—" aria-label="碎料商" style="min-width:64px"></td>
       <td><input type="number" min="0" step="0.001" value="${h.g}" data-k="g" aria-label="每包克數"></td>
-      <td class="c"><input type="checkbox" data-k="roast" ${h.roast?'checked':''} aria-label="需烘"></td>
-      <td class="c"><input type="checkbox" data-k="crush" ${h.crush?'checked':''} aria-label="需粗碎"></td>
       <td><input type="number" min="0" step="1" value="${esc(h.price??'')}" data-k="price" placeholder="請填" aria-label="藥材單價"></td>
-      <td><input type="number" min="0" step="1" value="${esc(h.fee??'')}" data-k="fee" placeholder="0" aria-label="加工費"></td>
-      <td class="num" data-out="w"></td><td class="num" data-out="c"></td><td class="num" data-out="f"></td>
+      <td class="num" data-out="pg"></td><td class="num" data-out="w"></td><td class="num" data-out="c"></td>
       <td><button type="button" class="del" aria-label="刪除此藥材">×</button></td>`;
-    tr.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
-      const k=inp.dataset.k;
-      if(k==='price'||k==='fee') h[k]=inp.value;
-      else if(k==='roast'||k==='crush') h[k]=inp.checked;
-      else if(k==='name'){ h.name=inp.value; }
-      else h[k]=inp.value;
-      save(); calcAll();
-    }));
+    bindRow(tr,h);
     tr.querySelector('.del').addEventListener('click',()=>{p.herbs.splice(i,1); save(); renderHerbs(); calcAll();});
     tb.appendChild(tr);
+    const pr=document.createElement('tr');
+    pr.innerHTML=`<td data-out="n" style="white-space:nowrap">${esc(h.name)}</td>
+      <td><input value="${esc(h.sup??'')}" data-k="sup" placeholder="—" aria-label="碎料商" style="min-width:64px"></td>
+      <td class="c"><input type="checkbox" data-k="roast" ${h.roast?'checked':''} aria-label="需烘"></td>
+      <td class="c"><input type="checkbox" data-k="crush" ${h.crush?'checked':''} aria-label="需粗碎"></td>
+      <td><input type="number" min="0" step="1" value="${esc(h.fee??'')}" data-k="fee" placeholder="0" aria-label="加工費"></td>
+      <td class="num" data-out="w"></td><td class="num" data-out="f"></td>`;
+    bindRow(pr,h);
+    pb.appendChild(pr);
   });
 }
 
@@ -507,15 +516,20 @@ function calc(p){
   const c4=feeCost+crushKg*n(s.grindKg)+roastKg*n(s.roastKg)+n(s.grindFix);
   const c5=bags*(n(s.bagMat)+n(s.bagLabor))+n(s.bagFix);
   const gW=String(s.gWeight).trim()===''?netKg:n(s.gWeight);
-  const gBase=gW*n(s.gKg);
-  const c6=s.gMode==='fixed'?n(s.gFixed)+n(s.gShip):Math.max(gBase,n(s.gMin))+n(s.gShip);
+  const gBase=gW*n(s.gKg), cap=Math.max(1,n(s.gCap)), perRun=n(s.gFixed)+n(s.gShip);
+  let c6, gRuns, gTotW=gW;
+  if(s.gMode==='cap'){
+    if(s.gShare){ gTotW=s.products.reduce((a,q)=>a+q.herbs.reduce((b,x)=>b+n(x.g),0)*n(q.bags)/1000*lossF,0);
+      gRuns=Math.ceil(gTotW/cap); c6=gTotW?gRuns*perRun*gW/gTotW:0; }
+    else { gRuns=gW>0?Math.ceil(gW/cap):0; c6=gRuns*perRun; }
+  } else c6=s.gMode==='fixed'?perRun:Math.max(gBase,n(s.gMin))+n(s.gShip);
   const boxQty=Math.ceil(boxes*(1+n(s.boxLoss)/100));
   const dryCost=boxes*n(s.dryN)*n(s.dryPrice);
   const c7=boxQty*n(s.boxPrice)+dryCost;
   const c8=boxes*n(s.stkN)*n(s.stkPrice)+n(s.stkFix);
   const costs=[c1,c2,c3,c4,c5,c6,c7,c8];
   const total=costs.reduce((a,b)=>a+b,0);
-  return {feeCost,bags,perBox,boxes,hourly,netKg,buyKg,gPerBag,crushKg,roastKg,rows,gW,gBase,boxQty,dryCost,costs,total,perBag:bags?total/bags:0};
+  return {feeCost,bags,perBox,boxes,hourly,netKg,buyKg,gPerBag,crushKg,roastKg,rows,gW,gBase,gRuns,gTotW,boxQty,dryCost,costs,total,perBag:bags?total/bags:0};
 }
 
 const sale=name=>{const p=state.products.find(x=>x.name===name); return p?n(p.sale):0;};
@@ -544,14 +558,19 @@ function calcAll(){
 
   const p=s.products[s.active], r=results[s.active];
   const trs=$('herbBody').children;
-  r.rows.forEach((x,i)=>{ if(trs[i]){trs[i].querySelector('[data-out=w]').textContent=fmt(x.bk,2)+' kg';
-    trs[i].querySelector('[data-out=c]').textContent=money(x.cost); trs[i].querySelector('[data-out=f]').textContent=money(x.fc);} });
+  const prs=$('procBody').children;
+  r.rows.forEach((x,i)=>{ const hb=p.herbs[i];
+    if(trs[i]){trs[i].querySelector('[data-out=w]').textContent=fmt(x.bk,2)+' kg';
+      trs[i].querySelector('[data-out=c]').textContent=money(x.cost);
+      trs[i].querySelector('[data-out=pg]').textContent='$'+fmt(perKg(hb)/1000,3);}
+    if(prs[i]){prs[i].querySelector('[data-out=w]').textContent=fmt(x.bk,2)+' kg'; prs[i].querySelector('[data-out=f]').textContent=money(x.fc);} });
   $('batchNote').textContent=`${p.name}一批 ${fmt(r.bags)} 包，需 ${fmt(r.boxes)} 袋外包裝（每袋 ${fmt(r.perBox)} 包）。`;
   $('n1').textContent=`藥師 ${fmt(n(s.phN))} 人 × ${fmt(n(s.phHr),2)} 小時 × 時薪 ${money(r.hourly)}；總工時 ${fmt(n(s.phN)*n(s.phHr),2)} 小時。`;
-  $('n3').textContent=`每包淨重 ${fmt(r.gPerBag,3)} g；本批藥材淨重 ${fmt(r.netKg,2)} kg，含損耗採購量 ${fmt(r.buyKg,2)} kg。藥材單價與加工費依各產品分別設定（例如茯苓在酸棗眠雲與荷風拂透的報價不同）。`;
-  $('n4').textContent=`藥材明細中各藥材的加工費合計 ${money(r.feeCost)}（依碎料商報價，以含損耗採購量計）。下方欄位為額外的通用費用，未另收可填 0。勾選項目：需粗碎 ${fmt(r.crushKg,2)} kg、需烘 ${fmt(r.roastKg,2)} kg（含損耗）。`;
-  $('n6').textContent=s.gMode==='fixed'?`每次照射 ${money(n(s.gFixed))}`+(n(s.gShip)?`，另加運費 ${money(n(s.gShip))}`:'')+`，每批照射一次，攤到每包約 ${money2(r.bags?r.costs[5]/r.bags:0)}。`:
-    `計價重量 ${fmt(r.gW,2)} kg × 單價 = ${money(r.gBase)}`+(r.gBase<n(s.gMin)?`，未達最低收費，以 ${money(n(s.gMin))} 計`:'')+'；另加運費。';
+  $('n3').textContent=`每包淨重 ${fmt(r.gPerBag,3)} g；本批用量＝每包克數 × ${fmt(r.bags)} 包＝${fmt(r.netKg,2)} kg`+(n(s.loss)>0?`，含損耗 ${fmt(n(s.loss),1)}% 為 ${fmt(r.buyKg,2)} kg。`:'（不計損耗）。')+'藥材單價依各產品分別設定；碎料商、烘碎與加工費請見第 4 項。';
+  $('n4').textContent=`藥材明細中各藥材的加工費合計 ${money(r.feeCost)}（依碎料商報價，以本批用量計）。下方欄位為額外的通用費用，未另收可填 0。勾選項目：需粗碎 ${fmt(r.crushKg,2)} kg、需烘 ${fmt(r.roastKg,2)} kg（含損耗）。`;
+  $('n6').textContent=s.gMode!=='cap'?'':(s.gShare
+    ? `四項合併送照：總重 ${fmt(r.gTotW,2)} kg，每次上限 ${fmt(n(s.gCap))} kg，需照射 ${fmt(r.gRuns)} 次，共 ${money(r.gRuns*(n(s.gFixed)+n(s.gShip)))}。${p.name}重 ${fmt(r.gW,2)} kg，依重量分攤 ${money(r.costs[5])}，每包約 ${money2(r.bags?r.costs[5]/r.bags:0)}。`
+    : `${p.name}單獨送照：重 ${fmt(r.gW,2)} kg，每次上限 ${fmt(n(s.gCap))} kg，需照射 ${fmt(r.gRuns)} 次 × ${money(n(s.gFixed)+n(s.gShip))}＝${money(r.costs[5])}，每包約 ${money2(r.bags?r.costs[5]/r.bags:0)}。`);
   $('n7').textContent=`含損耗需備 ${fmt(r.boxQty)} 個外包裝袋；每袋放 ${fmt(n(s.dryN))} 包 5 g 食品乾燥劑，本批乾燥劑 ${money(r.dryCost)}，攤到每小包約 ${money2(r.bags?r.dryCost/r.bags:0)}。`;
 
   r.costs.forEach((c,i)=>$('s'+(i+1)).textContent=money(c));
@@ -587,10 +606,10 @@ function calcAll(){
   const hiI=r.costs.indexOf(Math.max(...r.costs));
   $('fItems').innerHTML=r.costs.map((c,i)=>`<tr class="${i===hiI&&r.total?'hi':''}"><td><i class="dot" style="background:${COLORS[i]}"></i>${NAMES[i]}</td><td class="num">${money(c)}</td><td class="num">${money2(r.bags?c/r.bags:0)}</td><td class="num">${r.total?fmt(c/r.total*100,1):'0'}%</td></tr>`).join('')
     +`<tr><td><strong>合計</strong></td><td class="num"><strong>${money(r.total)}</strong></td><td class="num"><strong>${money2(r.perBag)}</strong></td><td class="num">100%</td></tr>`;
-  $('fBatch').textContent=`一批 ${fmt(r.bags)} 包、${fmt(r.boxes)} 袋（每袋 ${fmt(r.perBox)} 包，附乾燥劑 ${fmt(n(s.dryN))} 包）；藥材損耗率 ${fmt(n(s.loss),1)}%。`;
+  $('fBatch').textContent=`一批 ${fmt(r.bags)} 包、${fmt(r.boxes)} 袋（每袋 ${fmt(r.perBox)} 包，附乾燥劑 ${fmt(n(s.dryN))} 包）`+(n(s.loss)>0?`；藥材損耗率 ${fmt(n(s.loss),1)}%。`:'；藥材用量不計損耗。');
   const u=s.priceUnit==='jin'?1:0.6;
-  $('fHerbs').innerHTML=p.herbs.map((hb,i)=>{const x=r.rows[i]||{cost:0,fc:0};return `<tr><td>${esc(hb.name)}</td><td>${esc(hb.sup||'—')}</td><td class="num">${fmt(n(hb.g),3)} g</td><td class="num">${money(n(hb.price)*u)}</td><td class="num">${money(n(hb.fee)*u)}</td><td class="num">${money2(r.bags?(x.cost+x.fc)/r.bags:0)}</td></tr>`;}).join('')
-    +`<tr><td colspan="2"><strong>合計</strong></td><td class="num"><strong>${fmt(r.gPerBag,3)} g</strong></td><td></td><td></td><td class="num"><strong>${money2(r.bags?(r.costs[2]+r.feeCost)/r.bags:0)}</strong></td></tr>`;
+  $('fHerbs').innerHTML=p.herbs.map((hb,i)=>{const x=r.rows[i]||{cost:0};return `<tr><td>${esc(hb.name)}</td><td class="num">${fmt(n(hb.g),3)} g</td><td class="num">${money(n(hb.price)*u)}</td><td class="num">$${fmt(n(hb.price)*u/600,3)}</td><td class="num">${money2(r.bags?x.cost/r.bags:0)}</td></tr>`;}).join('')
+    +`<tr><td><strong>合計</strong></td><td class="num"><strong>${fmt(r.gPerBag,3)} g</strong></td><td></td><td></td><td class="num"><strong>${money2(r.bags?r.costs[2]/r.bags:0)}</strong></td></tr>`;
   const sp=sale(p.name), cb=r.perBag*r.perBox;
   $('saleTitle').textContent=`${p.name}　售價與毛利`;
   if(document.activeElement!==$('saleIn')) $('saleIn').value=p.sale??0;
@@ -634,10 +653,11 @@ $('navAdmin').addEventListener('click',()=>{ if(document.body.classList.contains
 $('navFront').addEventListener('click',()=>{ if(document.body.classList.contains('mode-admin')&&!leaveAdmin()) return; setMode('front'); });
 $('lockBtn').addEventListener('click',()=>{ if(!leaveAdmin()) return; unlocked=false; setMode('front'); });
 $('saveBtn').addEventListener('click',commit);
+$('gShare').addEventListener('change',e=>{state.gShare=e.target.checked; save(); calcAll();});
 $('discardBtn').addEventListener('click',()=>{ if(confirm('確定放棄所有未儲存的變更，回到上次儲存的數值？')) discard(); });
 window.addEventListener('beforeunload',e=>{ if(isDirty()){ e.preventDefault(); e.returnValue=''; } });
 setMode(unlocked?'admin':'front');
-load(); committed=clone(state); persist(); bindFields(); renderTabs(); renderHerbs(); calcAll(); updateDirty();
+load(); committed=clone(state); persist(); bindFields(); $('gShare').checked=!!state.gShare; renderTabs(); renderHerbs(); calcAll(); updateDirty();
 $('addHerb').addEventListener('click',()=>{state.products[state.active].herbs.push({name:'',sup:'',price:'',fee:0,g:0,roast:false,crush:true}); save(); renderHerbs(); calcAll();
   const r=$('herbBody').lastElementChild; r&&r.querySelector('input').focus();});
 $('resetBtn').addEventListener('click',()=>{if(!confirm('要將所有欄位（含藥材報價）還原為原始預設值嗎？\n還原後需按「儲存變更」才會套用到成本總覽。'))return;

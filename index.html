@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>茶包製作成本計算</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2EC; --panel:#FFFFFF; --ink:#1D2A23; --muted:#5E6D64; --line:#D3DCD2;
+  --leaf:#2F5A43; --leaf-soft:#E2ECE4; --tea:#A8741E; --field:#F7FAF6;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#141B17; --panel:#1C2620; --ink:#E6EEE8; --muted:#9DB0A4; --line:#304036;
+  --leaf:#8CC4A2; --leaf-soft:#22362A; --tea:#E0AE5C; --field:#18211C; } }
+:root[data-theme="dark"]{
+  --bg:#141B17; --panel:#1C2620; --ink:#E6EEE8; --muted:#9DB0A4; --line:#304036;
+  --leaf:#8CC4A2; --leaf-soft:#22362A; --tea:#E0AE5C; --field:#18211C; }
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:15px;line-height:1.6}
+.wrap{max-width:1160px;margin:0 auto;padding:28px 20px 60px}
+header h1{font-family:"Noto Serif TC","PMingLiU",serif;font-weight:900;font-size:clamp(26px,4vw,36px);margin:0 0 4px;letter-spacing:.02em}
+header p{margin:0 0 24px;color:var(--muted);max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+section.item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 18px 14px;margin-bottom:14px}
+section.item h2{font-size:16px;margin:0 0 12px;display:flex;align-items:baseline;gap:10px}
+section.item h2 .no{font-family:"Noto Serif TC",serif;color:var(--tea);font-size:20px;min-width:1.2em}
+section.item h2 .sub{margin-left:auto;font-weight:500;color:var(--leaf);font-variant-numeric:tabular-nums}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px 14px}
+label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
+input,select{font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;font-variant-numeric:tabular-nums}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--leaf);outline-offset:1px}
+.note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.batch{background:var(--leaf-soft);border-color:transparent}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:14px}
+th{font-weight:500;color:var(--muted);text-align:left;font-size:12.5px;padding:4px 6px}
+td{padding:4px 6px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px}
+button.del{border:none;background:none;color:var(--muted);padding:4px 8px;font-size:18px;line-height:1}
+button.del:hover{color:#B3432F}
+.row-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+aside{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
+.summary{background:var(--leaf);color:#fff;border-radius:12px;padding:22px 22px 18px}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .summary{color:#10261A} }
+:root[data-theme="dark"] .summary{color:#10261A}
+.summary .label{font-size:13px;opacity:.85}
+.summary .big{font-family:"Noto Serif TC",serif;font-weight:900;font-size:48px;line-height:1.1;font-variant-numeric:tabular-nums}
+.summary .big small{font-size:18px;font-weight:600;margin-left:4px}
+.kv{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums;padding:3px 0}
+.summary hr{border:none;border-top:1px solid currentColor;opacity:.25;margin:12px 0}
+.strip{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:14px 0 6px;background:rgba(255,255,255,.15)}
+.strip span{display:block;height:100%}
+.breakdown{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:14px}
+.breakdown h3,.price h3{margin:0 0 8px;font-size:15px}
+.bd-row{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px;align-items:center;font-size:13.5px;padding:4px 0;font-variant-numeric:tabular-nums}
+.bd-row i{width:10px;height:10px;border-radius:2px;display:block}
+.bd-row .pct{color:var(--muted);min-width:46px;text-align:right}
+.price{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:14px}
+.price .kv strong{color:var(--tea)}
+.tools{display:flex;gap:8px;margin-top:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+.tabs button{border-radius:20px;padding:6px 16px;background:var(--panel)}
+.tabs button[aria-pressed="true"]{background:var(--leaf);border-color:var(--leaf);color:var(--bg);font-weight:700}
+.compare{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:14px}
+.compare h2{font-size:16px;margin:0 0 8px}
+.compare table{min-width:720px}
+.compare td,.compare th{padding:6px 8px;border-bottom:1px solid var(--line)}
+.compare tr.on td{background:var(--leaf-soft)}
+.compare tbody tr{cursor:pointer}
+td.c{text-align:center}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--leaf)}
+.warn{color:var(--tea)}
+.unit{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:8px}
+.unit select{width:auto;padding:4px 8px}
+@media print{aside{position:static}.tools,.row-actions,button.del{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>茶包製作成本計算</h1>
+  <p>四項中藥茶飲（酸棗眠雲、寬心順氣、荷風拂透、清韻澄意）以每項產品「一批次」為單位，換算每包茶包與每個外包裝的成本。藥材單價與加工費依各產品分別設定，數值會保存在這台裝置的瀏覽器中。</p>
+</header>
+
+<div class="grid">
+<main>
+  <div class="compare">
+    <h2>四項產品成本對照</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>產品</th><th style="text-align:right">每包克數</th><th style="text-align:right">藥材／包</th><th style="text-align:right">總成本／包</th><th style="text-align:right">每袋成本</th><th style="text-align:right">售價／袋</th><th style="text-align:right">毛利／袋</th><th style="text-align:right">毛利率</th></tr></thead>
+      <tbody id="cmpBody"></tbody>
+    </table></div>
+    <p class="note">點選產品可切換下方配方與明細。人力、水電、包裝等費用以每項產品各自一個批次計算。</p>
+  </div>
+  <div class="tabs" id="tabs" role="group" aria-label="選擇產品"></div>
+  <section class="item batch">
+    <h2>批次設定</h2>
+    <div class="fields">
+      <label>本產品一批生產（包）<input type="number" id="bags" min="1" step="1"></label>
+      <label>每袋外包裝裝入（包）<input type="number" id="perBox" min="1" step="1"></label>
+      <label>藥材損耗率（%）<input type="number" id="loss" min="0" max="90" step="0.5"></label>
+    </div>
+    <p class="note" id="batchNote"></p>
+  </section>
+
+  <section class="item">
+    <h2><span class="no">1</span>藥師人力成本<span class="sub" id="s1"></span></h2>
+    <div class="fields">
+      <label>參與藥師人數<input type="number" id="phN" min="0" step="1"></label>
+      <label>每人工時（小時／批）<input type="number" id="phHr" min="0" step="0.25"></label>
+      <label>藥師時薪（元／小時）<input type="number" id="phRate" min="0" step="10"></label>
+    </div>
+    <p class="note" id="n1"></p>
+  </section>
+
+  <section class="item">
+    <h2><span class="no">2</span>水電費成本<span class="sub" id="s2"></span></h2>
+    <div class="fields">
+      <label>設備總功率（kW）<input type="number" id="kw" min="0" step="0.1"></label>
+      <label>設備使用時數（小時）<input type="number" id="kwHr" min="0" step="0.25"></label>
+      <label>電價（營業用電夏月，元／度）<input type="number" id="ePrice" min="0" step="0.01"></label>
+      <label>用水量（度）<input type="number" id="water" min="0" step="0.1"></label>
+      <label>水價（元／度）<input type="number" id="wPrice" min="0" step="0.1"></label>
+      <label>其他分攤（元）<input type="number" id="utilOther" min="0" step="1"></label>
+    </div>
+  </section>
+
+  <section class="item">
+    <h2><span class="no">3</span>藥材成本：<span id="pName"></span><span class="sub" id="s3"></span></h2>
+    <div class="unit">單價單位
+      <select id="priceUnit"><option value="kg">元／公斤</option><option value="jin">元／台斤（600 g）</option></select>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>藥材名稱</th><th>碎料商</th><th>每包克數（g）</th><th class="c">烘</th><th class="c">碎</th><th id="priceHead">藥材單價（元／公斤）</th><th id="feeHead">加工費（元／公斤）</th><th style="text-align:right">本批採購量</th><th style="text-align:right">藥材小計</th><th style="text-align:right">加工小計</th><th></th></tr></thead>
+        <tbody id="herbBody"></tbody>
+      </table>
+    </div>
+    <div class="row-actions"><button type="button" id="addHerb">新增藥材</button></div>
+    <p class="note" id="n3"></p>
+    <p class="note warn" id="missing"></p>
+  </section>
+
+  <section class="item">
+    <h2><span class="no">4</span>加工粗碎藥材成本<span class="sub" id="s4"></span></h2>
+    <div class="fields">
+      <label>額外粗碎費（元／公斤）<input type="number" id="grindKg" min="0" step="0.5"></label>
+      <label>額外烘焙費（元／公斤）<input type="number" id="roastKg" min="0" step="0.5"></label>
+      <label>固定費用（元／批）<input type="number" id="grindFix" min="0" step="1"></label>
+    </div>
+    <p class="note" id="n4"></p>
+  </section>
+
+  <section class="item">
+    <h2><span class="no">5</span>包裝茶包成本<span class="sub" id="s5"></span></h2>
+    <div class="fields">
+      <label>茶包袋材料（元／包）<input type="number" id="bagMat" min="0" step="0.01"></label>
+      <label>充填封口代工（元／包）<input type="number" id="bagLabor" min="0" step="0.01"></label>
+      <label>固定費用（元／批）<input type="number" id="bagFix" min="0" step="1"></label>
+    </div>
+  </section>
+
+  <section class="item">
+    <h2><span class="no">6</span>照射 Gamma<span class="sub" id="s6"></span></h2>
+    <div class="fields">
+      <label>計價方式
+        <select id="gMode"><option value="kg">依重量（元／公斤）</option><option value="fixed">每次固定費用</option></select>
+      </label>
+      <label>單價（元／公斤）<input type="number" id="gKg" min="0" step="0.5"></label>
+      <label>照射計價重量（公斤）<input type="number" id="gWeight" min="0" step="0.1" placeholder="空白＝藥材淨重"></label>
+      <label>最低收費（元）<input type="number" id="gMin" min="0" step="1"></label>
+      <label>每次照射費用（元）<input type="number" id="gFixed" min="0" step="1"></label>
+      <label>運費（元）<input type="number" id="gShip" min="0" step="1"></label>
+    </div>
+    <p class="note" id="n6"></p>
+  </section>
+
+  <section class="item">
+    <h2><span class="no">7</span>外包裝包材（含乾燥劑）<span class="sub" id="s7"></span></h2>
+    <div class="fields">
+      <label>外包裝袋單價（元／袋）<input type="number" id="boxPrice" min="0" step="0.1"></label>
+      <label>包材損耗率（%）<input type="number" id="boxLoss" min="0" step="0.5"></label>
+      <label>每袋乾燥劑（5 g）包數<input type="number" id="dryN" min="0" step="1"></label>
+      <label>乾燥劑單價（元／包）<input type="number" id="dryPrice" min="0" step="0.1"></label>
+    </div>
+    <p class="note" id="n7"></p>
+  </section>
+
+  <section class="item">
+    <h2><span class="no">8</span>外包裝貼紙<span class="sub" id="s8"></span></h2>
+    <div class="fields">
+      <label>每袋外包裝張數<input type="number" id="stkN" min="0" step="1"></label>
+      <label>貼紙單價（元／張）<input type="number" id="stkPrice" min="0" step="0.01"></label>
+      <label>製版／設計固定費（元）<input type="number" id="stkFix" min="0" step="1"></label>
+    </div>
+  </section>
+</main>
+
+<aside>
+  <div class="summary">
+    <div class="label" id="sumLabel">每包茶包成本</div>
+    <div class="big" id="perBag">—<small>元</small></div>
+    <div class="strip" id="strip"></div>
+    <hr>
+    <div class="kv"><span>每袋外包裝成本</span><span id="perBox2"></span></div>
+    <div class="kv"><span>本批總成本</span><span id="total"></span></div>
+    <div class="kv"><span>外包裝袋數</span><span id="boxes"></span></div>
+  </div>
+
+  <div class="breakdown">
+    <h3>成本結構</h3>
+    <div id="bd"></div>
+  </div>
+
+  <div class="price">
+    <h3 id="saleTitle">售價與毛利</h3>
+    <div class="fields" style="grid-template-columns:1fr">
+      <label>售價（元／袋，填 0 表示不販售）<input type="number" id="saleIn" min="0" step="1"></label>
+    </div>
+    <div class="kv" style="margin-top:8px"><span>每小包售價</span><strong id="saleBag"></strong></div>
+    <div class="kv"><span>每袋毛利</span><strong id="gpBox"></strong></div>
+    <div class="kv"><span>毛利率</span><strong id="gpPct"></strong></div>
+    <div class="kv"><span>本批毛利</span><strong id="gpBatch"></strong></div>
+    <p class="note" id="beNote"></p>
+    <hr style="border:none;border-top:1px solid var(--line);margin:12px 0">
+    <div class="fields" style="grid-template-columns:1fr">
+      <label>參考：成本加成（%）<input type="number" id="markup" min="0" step="1"></label>
+    </div>
+    <div class="kv" style="margin-top:8px"><span>加成後每袋售價</span><span id="sellBox"></span></div>
+  </div>
+
+  <div class="tools">
+    <button type="button" id="printBtn">列印</button>
+    <button type="button" id="resetBtn">還原預設值</button>
+  </div>
+</aside>
+</div>
+</div>
+
+<script>
+const DEFAULTS = {
+  perBox:10, loss:5,
+  phN:2, phHr:4, phRate:450,
+  kw:1.5, kwHr:4, ePrice:7.43, water:0.5, wPrice:12, utilOther:0,
+  grindKg:0, roastKg:0, grindFix:0,
+  bagMat:0.5, bagLabor:1, bagFix:0,
+  gMode:'fixed', gKg:20, gWeight:'', gMin:1500, gFixed:5000, gShip:0,
+  boxPrice:8, boxLoss:2, dryN:1, dryPrice:1.2,
+  stkN:1, stkPrice:1.5, stkFix:0,
+  markup:30, priceUnit:'jin', active:0,
+  products:[{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": false, "crush": true, "price": 2850, "fee": 0}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "fee": 0}, {"name": "茯苓", "sup": "宏祥", "g": 1.0925, "roast": false, "crush": true, "price": 280, "fee": 0}, {"name": "麥門冬", "sup": "宏祥", "g": 0.828, "roast": true, "crush": true, "price": 700, "fee": 0}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "fee": 0}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "fee": 0}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "fee": 50}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "fee": 0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "fee": 60}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "fee": 0}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "fee": 0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "fee": 90}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "fee": 0}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "fee": 80}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "fee": 0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "fee": 100}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "fee": 0}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "fee": 60}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "fee": 30}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "fee": 0}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "fee": 0}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "fee": 80}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "fee": 30}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "fee": 70}]}]
+};
+const KEY='teabag-cost-v4';
+const COLORS=['#2F5A43','#6E9C7E','#A8741E','#D4A85A','#5B7F9A','#9C6A8C','#B3543F','#7A7F3A'];
+const NAMES=['藥師人力','水電費','藥材','加工粗碎','包裝茶包','照射 Gamma','外包裝包材','外包裝貼紙'];
+let state;
+function load(){
+  try{if(!localStorage.getItem(KEY)){const o3=localStorage.getItem('teabag-cost-v3'); if(o3){const v=JSON.parse(o3);
+      const st=structuredClone(DEFAULTS); Object.keys(v).forEach(k=>{if(!['products','prices','fees'].includes(k)) st[k]=v[k];});
+      (v.products||[]).forEach(op=>{const np=st.products.find(x=>x.name===op.name); if(np){np.bags=op.bags; np.sale=op.sale;}});
+      localStorage.setItem(KEY,JSON.stringify(st));}}}catch(e){}
+  try{if(!localStorage.getItem(KEY)){const o=localStorage.getItem('teabag-cost-v2'); if(o){const v=JSON.parse(o);
+      const keep={}; ['perBox','loss','phN','phHr','phSal','phMonthHr','phOver','kw','kwHr','ePrice','water','wPrice','utilOther','bagMat','bagLabor','bagFix','gMode','gKg','gWeight','gMin','gFixed','gShip','boxPrice','boxLoss','dryN','dryPrice','stkN','stkPrice','stkFix','markup'].forEach(k=>{if(k in v) keep[k]=v[k];});
+      const st=Object.assign(structuredClone(DEFAULTS),keep); if(n(st.ePrice)===4.5) st.ePrice=7.43; localStorage.setItem(KEY,JSON.stringify(st));}}}catch(e){}
+  try{const s=localStorage.getItem(KEY); if(s){state=Object.assign(structuredClone(DEFAULTS),JSON.parse(s)); if(n(state.ePrice)===4.5) state.ePrice=7.43; if(!state.gMig5000){state.gMode='fixed';state.gFixed=5000;if(n(state.gShip)===500)state.gShip=0;state.gMig5000=true;} if(!state.dryMig){state.perBox=10;state.dryN=1;state.dryPrice=1.2;state.dryMig=true;} if(!state.saleMig){state.sale={'酸棗':500,'寬心':450,'荷風':450,'清韻':0};state.saleMig=true;} return;}}catch(e){}
+  state=structuredClone(DEFAULTS);
+}
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
+const $=id=>document.getElementById(id);
+const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
+const fmt=(v,d=0)=>v.toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d});
+const money=v=>'$'+fmt(v,0);
+const money2=v=>'$'+fmt(v,2);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const perKg=h=>{const p=n(h.price); return state.priceUnit==='jin'?p/0.6:p;};
+const feeKg=h=>{const f=n(h.fee); return state.priceUnit==='jin'?f/0.6:f;};
+const priceSet=h=>String(h.price??'').trim()!=='';
+
+const FIELDS=Object.keys(DEFAULTS).filter(k=>!['products','prices','fees','active'].includes(k));
+function bindFields(){
+  FIELDS.forEach(k=>{
+    const el=$(k); if(!el) return;
+    el.value=state[k];
+    el.addEventListener('input',()=>{state[k]=el.value; save(); if(k==='priceUnit') renderHerbs(); calcAll();});
+  });
+}
+function renderTabs(){
+  $('tabs').innerHTML='';
+  state.products.forEach((p,i)=>{
+    const b=document.createElement('button'); b.type='button'; b.textContent=p.name;
+    b.setAttribute('aria-pressed',i===state.active);
+    b.onclick=()=>select(i); $('tabs').appendChild(b);
+  });
+}
+function syncBags(){ if(document.activeElement!==$('bags')) $('bags').value=state.products[state.active].bags; }
+function select(i){state.active=i; save(); renderTabs(); renderHerbs(); calcAll();}
+function renderHerbs(){
+  const p=state.products[state.active], tb=$('herbBody'); tb.innerHTML='';
+  $('pName').textContent=p.name;
+  $('priceHead').textContent=state.priceUnit==='jin'?'藥材單價（元／台斤）':'藥材單價（元／公斤）';
+  $('feeHead').textContent=state.priceUnit==='jin'?'加工費（元／台斤）':'加工費（元／公斤）';
+  syncBags();
+  p.herbs.forEach((h,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input value="${esc(h.name)}" data-k="name" aria-label="藥材名稱"></td>
+      <td><input value="${esc(h.sup??'')}" data-k="sup" placeholder="—" aria-label="碎料商" style="min-width:64px"></td>
+      <td><input type="number" min="0" step="0.001" value="${h.g}" data-k="g" aria-label="每包克數"></td>
+      <td class="c"><input type="checkbox" data-k="roast" ${h.roast?'checked':''} aria-label="需烘"></td>
+      <td class="c"><input type="checkbox" data-k="crush" ${h.crush?'checked':''} aria-label="需粗碎"></td>
+      <td><input type="number" min="0" step="1" value="${esc(h.price??'')}" data-k="price" placeholder="請填" aria-label="藥材單價"></td>
+      <td><input type="number" min="0" step="1" value="${esc(h.fee??'')}" data-k="fee" placeholder="0" aria-label="加工費"></td>
+      <td class="num" data-out="w"></td><td class="num" data-out="c"></td><td class="num" data-out="f"></td>
+      <td><button type="button" class="del" aria-label="刪除此藥材">×</button></td>`;
+    tr.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{
+      const k=inp.dataset.k;
+      if(k==='price'||k==='fee') h[k]=inp.value;
+      else if(k==='roast'||k==='crush') h[k]=inp.checked;
+      else if(k==='name'){ h.name=inp.value; }
+      else h[k]=inp.value;
+      save(); calcAll();
+    }));
+    tr.querySelector('.del').addEventListener('click',()=>{p.herbs.splice(i,1); save(); renderHerbs(); calcAll();});
+    tb.appendChild(tr);
+  });
+}
+
+function calc(p){
+  const s=state, bags=Math.max(0,n(p.bags)), perBox=Math.max(1,n(s.perBox));
+  const lossF=1/(1-Math.min(n(s.loss),90)/100);
+  const boxes=Math.ceil(bags/perBox);
+  const hourly=n(s.phRate);
+  const c1=n(s.phN)*n(s.phHr)*hourly;
+  const c2=n(s.kw)*n(s.kwHr)*n(s.ePrice)+n(s.water)*n(s.wPrice)+n(s.utilOther);
+  let netKg=0,buyKg=0,c3=0,gPerBag=0,crushKg=0,roastKg=0,feeCost=0; const rows=[];
+  p.herbs.forEach(h=>{
+    const nk=n(h.g)*bags/1000, bk=nk*lossF, cost=bk*perKg(h);
+    netKg+=nk; buyKg+=bk; c3+=cost; gPerBag+=n(h.g);
+    if(h.crush) crushKg+=bk; if(h.roast) roastKg+=bk;
+    const fc=bk*feeKg(h); feeCost+=fc;
+    rows.push({bk,cost,fc});
+  });
+  const c4=feeCost+crushKg*n(s.grindKg)+roastKg*n(s.roastKg)+n(s.grindFix);
+  const c5=bags*(n(s.bagMat)+n(s.bagLabor))+n(s.bagFix);
+  const gW=String(s.gWeight).trim()===''?netKg:n(s.gWeight);
+  const gBase=gW*n(s.gKg);
+  const c6=s.gMode==='fixed'?n(s.gFixed)+n(s.gShip):Math.max(gBase,n(s.gMin))+n(s.gShip);
+  const boxQty=Math.ceil(boxes*(1+n(s.boxLoss)/100));
+  const dryCost=boxes*n(s.dryN)*n(s.dryPrice);
+  const c7=boxQty*n(s.boxPrice)+dryCost;
+  const c8=boxes*n(s.stkN)*n(s.stkPrice)+n(s.stkFix);
+  const costs=[c1,c2,c3,c4,c5,c6,c7,c8];
+  const total=costs.reduce((a,b)=>a+b,0);
+  return {feeCost,bags,perBox,boxes,hourly,netKg,buyKg,gPerBag,crushKg,roastKg,rows,gW,gBase,boxQty,dryCost,costs,total,perBag:bags?total/bags:0};
+}
+
+const sale=name=>{const p=state.products.find(x=>x.name===name); return p?n(p.sale):0;};
+const pct=v=>(v*100).toLocaleString('zh-TW',{maximumFractionDigits:1})+'%';
+function saleCells(name,r){
+  const sp=sale(name), cb=r.perBag*r.perBox;
+  if(!sp) return `<td class="num" colspan="3" style="color:var(--muted)">不販售（成本 ${money(r.total)}／批）</td>`;
+  const gp=sp-cb; return `<td class="num">${money(sp)}</td><td class="num"${gp<0?' style="color:#B3432F"':''}>${money2(gp)}</td><td class="num">${pct(gp/sp)}</td>`;
+}
+function totalRow(results){
+  let rev=0,cost=0,nsCost=0;
+  results.forEach((r,i)=>{const sp=sale(state.products[i].name); if(sp){rev+=sp*r.boxes; cost+=r.total;} else nsCost+=r.total;});
+  const net=rev-cost-nsCost;
+  return `<tr style="cursor:default"><td colspan="5">四項各一批合計：銷售收入 ${money(rev)}，販售品成本 ${money(cost)}${nsCost?`，不販售品成本 ${money(nsCost)}`:''}</td><td class="num" colspan="3"><strong${net<0?' style="color:#B3432F"':''}>淨毛利 ${money(net)}</strong></td></tr>`;
+}
+function calcAll(){
+  const s=state, m=1+n(s.markup)/100;
+  const results=s.products.map(calc);
+  $('cmpBody').innerHTML=results.map((r,i)=>`<tr class="${i===s.active?'on':''}" data-i="${i}"><td>${esc(s.products[i].name)}</td>
+    <td class="num">${fmt(r.gPerBag,2)} g</td><td class="num">${money2(r.bags?r.costs[2]/r.bags:0)}</td>
+    <td class="num"><strong>${money2(r.perBag)}</strong></td><td class="num">${money2(r.perBag*r.perBox)}</td>${saleCells(s.products[i].name,r)}</tr>`).join('')+totalRow(results);
+  $('cmpBody').querySelectorAll('tr').forEach(tr=>tr.onclick=()=>select(+tr.dataset.i));
+
+  const miss=[]; s.products.forEach(p=>p.herbs.forEach(h=>{if(h.name&&!priceSet(h)) miss.push(p.name+'・'+h.name);}));
+  $('missing').textContent=miss.length?`尚未填單價 ${miss.length} 項：${miss.join('、')}`:'';
+
+  const p=s.products[s.active], r=results[s.active];
+  const trs=$('herbBody').children;
+  r.rows.forEach((x,i)=>{ if(trs[i]){trs[i].querySelector('[data-out=w]').textContent=fmt(x.bk,2)+' kg';
+    trs[i].querySelector('[data-out=c]').textContent=money(x.cost); trs[i].querySelector('[data-out=f]').textContent=money(x.fc);} });
+  $('batchNote').textContent=`${p.name}一批 ${fmt(r.bags)} 包，需 ${fmt(r.boxes)} 袋外包裝（每袋 ${fmt(r.perBox)} 包）。`;
+  $('n1').textContent=`藥師 ${fmt(n(s.phN))} 人 × ${fmt(n(s.phHr),2)} 小時 × 時薪 ${money(r.hourly)}；總工時 ${fmt(n(s.phN)*n(s.phHr),2)} 小時。`;
+  $('n3').textContent=`每包淨重 ${fmt(r.gPerBag,3)} g；本批藥材淨重 ${fmt(r.netKg,2)} kg，含損耗採購量 ${fmt(r.buyKg,2)} kg。藥材單價與加工費依各產品分別設定（例如茯苓在酸棗眠雲與荷風拂透的報價不同）。`;
+  $('n4').textContent=`藥材明細中各藥材的加工費合計 ${money(r.feeCost)}（依碎料商報價，以含損耗採購量計）。下方欄位為額外的通用費用，未另收可填 0。勾選項目：需粗碎 ${fmt(r.crushKg,2)} kg、需烘 ${fmt(r.roastKg,2)} kg（含損耗）。`;
+  $('n6').textContent=s.gMode==='fixed'?`每次照射 ${money(n(s.gFixed))}`+(n(s.gShip)?`，另加運費 ${money(n(s.gShip))}`:'')+`，每批照射一次，攤到每包約 ${money2(r.bags?r.costs[5]/r.bags:0)}。`:
+    `計價重量 ${fmt(r.gW,2)} kg × 單價 = ${money(r.gBase)}`+(r.gBase<n(s.gMin)?`，未達最低收費，以 ${money(n(s.gMin))} 計`:'')+'；另加運費。';
+  $('n7').textContent=`含損耗需備 ${fmt(r.boxQty)} 個外包裝袋；每袋放 ${fmt(n(s.dryN))} 包 5 g 食品乾燥劑，本批乾燥劑 ${money(r.dryCost)}，攤到每小包約 ${money2(r.bags?r.dryCost/r.bags:0)}。`;
+
+  r.costs.forEach((c,i)=>$('s'+(i+1)).textContent=money(c));
+  $('sumLabel').textContent=`${p.name}　每包茶包成本`;
+  $('perBag').innerHTML=`${fmt(r.perBag,2)}<small>元</small>`;
+  $('perBox2').textContent=money2(r.perBag*r.perBox);
+  $('total').textContent=money(r.total);
+  $('boxes').textContent=fmt(r.boxes)+' 袋';
+  $('strip').innerHTML=r.costs.map((c,i)=>r.total?`<span title="${NAMES[i]}" style="width:${c/r.total*100}%;background:${COLORS[i]}"></span>`:'').join('');
+  $('bd').innerHTML=r.costs.map((c,i)=>`<div class="bd-row"><i style="background:${COLORS[i]}"></i><span>${NAMES[i]}</span><span>${money2(r.bags?c/r.bags:0)}／包</span><span class="pct">${r.total?fmt(c/r.total*100,1):'0'}%</span></div>`).join('');
+  $('sellBox').textContent=money2(r.perBag*r.perBox*m);
+  const sp=sale(p.name), cb=r.perBag*r.perBox;
+  $('saleTitle').textContent=`${p.name}　售價與毛利`;
+  if(document.activeElement!==$('saleIn')) $('saleIn').value=p.sale??0;
+  if(sp){ const gp=sp-cb;
+    $('saleBag').textContent=money2(sp/r.perBox); $('gpBox').textContent=money2(gp);
+    $('gpPct').textContent=pct(gp/sp); $('gpBatch').textContent=money(gp*r.boxes);
+    $('beNote').textContent=gp>0?`每袋成本 ${money2(cb)}，售價為成本的 ${fmt(sp/cb,2)} 倍。`:'售價低於成本，每賣一袋都會虧損。';
+  } else { ['saleBag','gpBox','gpPct'].forEach(k=>$(k).textContent='—');
+    $('gpBatch').textContent='−'+money(r.total);
+    $('beNote').textContent=`${p.name}不販售，本批成本 ${money(r.total)} 全數為支出（例如贈品或推廣用），需由其他產品的毛利支應。`; }
+}
+
+load(); bindFields(); renderTabs(); renderHerbs(); calcAll();
+$('addHerb').addEventListener('click',()=>{state.products[state.active].herbs.push({name:'',sup:'',price:'',fee:0,g:0,roast:false,crush:true}); save(); renderHerbs(); calcAll();
+  const r=$('herbBody').lastElementChild; r&&r.querySelector('input').focus();});
+$('resetBtn').addEventListener('click',()=>{if(!confirm('確定要清除目前所有輸入（含藥材單價），還原為原始配方與預設值？'))return;
+  state=structuredClone(DEFAULTS); save(); FIELDS.forEach(k=>{const el=$(k); if(el) el.value=state[k];}); renderTabs(); renderHerbs(); calcAll();});
+$('bags').addEventListener('input',e=>{state.products[state.active].bags=e.target.value; save(); calcAll();});
+$('saleIn').addEventListener('input',e=>{state.products[state.active].sale=e.target.value; save(); calcAll();});
+$('printBtn').addEventListener('click',()=>window.print());
+</script>
+</body>
+</html>

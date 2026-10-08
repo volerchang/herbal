@@ -156,6 +156,9 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 .site-foot{margin-top:40px;padding-top:22px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:13px;line-height:1.8}
 .site-foot p{margin:0}
 .site-foot .ico{width:16px;height:16px;margin-right:6px;vertical-align:-3px;opacity:.85}
+#herbFoot td{border-top:2px solid var(--leaf);background:var(--band);padding-top:10px;padding-bottom:10px}
+#herbFoot td:first-child{border-radius:0 0 0 8px}
+#herbFoot td:last-child{border-radius:0 0 8px 0}
 @media print{.nav,.adminbar{display:none}aside{position:static}.tools,.row-actions,button.del{display:none}}
 </style>
 </head>
@@ -189,7 +192,6 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   <span id="saveStatus" aria-live="polite"></span>
   <button type="button" class="save" id="saveBtn">儲存變更</button>
   <button type="button" id="discardBtn">放棄變更</button>
-  <button type="button" id="exportBtn">匯出 HTML</button>
   <button type="button" id="lockBtn">鎖定並返回總覽</button>
 </div>
 
@@ -270,6 +272,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
       <table style="min-width:640px">
         <thead><tr><th>藥材名稱</th><th>每包克數（g）</th><th id="priceHead">藥材單價（元／台斤）</th><th style="text-align:right">藥材單價（元／克）</th><th style="text-align:right">本批用量</th><th style="text-align:right">藥材小計</th><th></th></tr></thead>
         <tbody id="herbBody"></tbody>
+        <tfoot id="herbFoot"></tfoot>
       </table>
     </div>
     <div class="row-actions"><button type="button" id="addHerb">新增藥材</button></div>
@@ -280,8 +283,8 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   <section class="item admin-only">
     <h2><span class="no">4</span>加工粗碎藥材成本<span class="sub" id="s4"></span></h2>
     <div class="tablewrap" style="margin-bottom:14px">
-      <table style="min-width:660px">
-        <thead><tr><th style="white-space:nowrap">藥材名稱</th><th>碎料商</th><th class="c">烘</th><th class="c">碎</th><th id="feeHead">加工費（元／克）</th><th style="text-align:right">本批用量</th><th style="text-align:right">加工小計</th></tr></thead>
+      <table style="min-width:780px">
+        <thead><tr><th style="white-space:nowrap">藥材名稱</th><th>碎料商</th><th class="c">烘</th><th class="c">碎</th><th id="feeHead">烘加工費（元／克）</th><th>碎加工費（元／克）</th><th style="text-align:right">本批用量</th><th style="text-align:right">加工小計</th></tr></thead>
         <tbody id="procBody"></tbody>
       </table>
     </div>
@@ -386,7 +389,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 </div>
 
 <script id="app">
-const SEED=/*SEED*/{"perBox": 10, "loss": 0, "phN": 2, "phHr": 4, "phRate": 450, "kw": 1.5, "kwHr": 4, "ePrice": 7.43, "water": 0.5, "wPrice": 12, "utilOther": 0, "grindKg": 0, "roastKg": 0, "grindFix": 0, "bagMat": 0.5, "bagLabor": 1, "bagFix": 0, "gMode": "cap", "gCap": 150, "gShare": true, "gKg": 20, "gWeight": "", "gMin": 1500, "gFixed": 5000, "gShip": 0, "boxPrice": 3.5, "boxLoss": 2, "dryN": 1, "dryPrice": 1.2, "stkN": 1, "stkPrice": 1.5, "stkFix": 0, "markup": 30, "priceUnit": "jin", "gMig5000": true, "dryMig": true, "saleMig": true, "lossMig0": true, "gCapMig": true, "products": [{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": false, "crush": true, "price": 2850, "feeG": 0}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "feeG": 0}, {"name": "茯苓", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 280, "feeG": 0}, {"name": "麥門冬", "sup": "吉翔", "g": 0.828, "roast": true, "crush": true, "price": 700, "feeG": 0}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "feeG": 0}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "feeG": 0}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "feeG": 0.08333333333333333}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "feeG": 0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "feeG": 0.1}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "feeG": 0}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "feeG": 0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "feeG": 0.15}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "feeG": 0}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "feeG": 0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "feeG": 0.16666666666666666}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "feeG": 0}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "feeG": 0.1}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "feeG": 0.05}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "feeG": 0}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "feeG": 0}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.05}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "feeG": 0.11666666666666667}]}], "savedAt": 1791378462729, "seedId": "s1791378462729"}/*END*/;
+const SEED=/*SEED*/{"perBox": 10, "loss": 0, "phN": 2, "phHr": 4, "phRate": 450, "kw": 1.5, "kwHr": 4, "ePrice": 7.43, "water": 0.5, "wPrice": 12, "utilOther": 0, "grindKg": 0, "roastKg": 0, "grindFix": 0, "bagMat": 0.85, "bagLabor": 0, "bagFix": 0, "gMode": "cap", "gCap": 150, "gShare": true, "gKg": 20, "gWeight": "", "gMin": 1500, "gFixed": 5000, "gShip": 0, "boxPrice": 3.5, "boxLoss": 2, "dryN": 1, "dryPrice": 1.2, "stkN": 1, "stkPrice": 1.5, "stkFix": 0, "markup": 30, "priceUnit": "jin", "gMig5000": true, "dryMig": true, "saleMig": true, "lossMig0": true, "gCapMig": true, "products": [{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": false, "crush": true, "price": 2850, "feeG": 0}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "feeG": 0}, {"name": "茯苓", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 280, "feeG": 0}, {"name": "麥門冬", "sup": "吉翔", "g": 0.828, "roast": true, "crush": true, "price": 700, "feeG": 0}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "feeG": 0}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "feeG": 0}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "feeG": 0.08333333333333333}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "feeG": 0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "feeG": 0.1}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "feeG": 0}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "feeG": 0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "feeG": 0.15}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "feeG": 0}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "feeG": 0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "feeG": 0.16666666666666666}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "feeG": 0}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "feeG": 0.1}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "feeG": 0.05}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "feeG": 0}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "feeG": 0}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.05}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "feeG": 0.11666666666666667}]}], "savedAt": 1791428874640, "seedId": "s1791428874640"}/*END*/;
 const PAGE_SRC=(()=>{ try{ const c=document.documentElement.cloneNode(true);
   c.querySelectorAll('script').forEach(s=>{ if(s.id!=='app') s.remove(); });
   return '<!DOCTYPE html>\n'+c.outerHTML; }catch(e){ return ''; } })();
@@ -395,7 +398,7 @@ const DEFAULTS = {
   phN:2, phHr:4, phRate:450,
   kw:1.5, kwHr:4, ePrice:7.43, water:0.5, wPrice:12, utilOther:0,
   grindKg:0, roastKg:0, grindFix:0,
-  bagMat:0.5, bagLabor:1, bagFix:0,
+  bagMat:0.85, bagLabor:0, bagFix:0,
   gMode:'cap', gCap:150, gShare:true, gKg:20, gWeight:'', gMin:1500, gFixed:5000, gShip:0,
   boxPrice:3.5, boxLoss:2, dryN:1, dryPrice:1.2,
   stkN:1, stkPrice:1.5, stkFix:0,
@@ -455,7 +458,7 @@ const money=v=>'$'+fmt(v,0);
 const money2=v=>'$'+fmt(v,2);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const perKg=h=>{const p=n(h.price); return state.priceUnit==='jin'?p/0.6:p;};
-const feeKg=h=>n(h.feeG)*1000;
+const feeKg=h=>(n(h.feeG)+n(h.crushG))*1000;
 const r4=v=>{const x=Number(v); return v===''||v==null||!isFinite(x)?(v??''):String(Number(x.toFixed(4)));};
 const priceSet=h=>String(h.price??'').trim()!=='';
 
@@ -509,7 +512,8 @@ function renderHerbs(){
       <td><input value="${esc(h.sup??'')}" data-k="sup" placeholder="—" aria-label="碎料商" style="min-width:64px"></td>
       <td class="c"><input type="checkbox" data-k="roast" ${h.roast?'checked':''} aria-label="需烘"></td>
       <td class="c"><input type="checkbox" data-k="crush" ${h.crush?'checked':''} aria-label="需粗碎"></td>
-      <td><input type="number" min="0" step="0.0001" value="${esc(r4(h.feeG))}" data-k="feeG" placeholder="0" aria-label="加工費（元／克）"></td>
+      <td><input type="number" min="0" step="0.0001" value="${esc(r4(h.feeG))}" data-k="feeG" placeholder="0" aria-label="烘加工費（元／克）"></td>
+      <td><input type="number" min="0" step="0.0001" value="${esc(r4(h.crushG))}" data-k="crushG" placeholder="0" aria-label="碎加工費（元／克）"></td>
       <td class="num" data-out="w"></td><td class="num" data-out="f"></td>`;
     bindRow(pr,h);
     pb.appendChild(pr);
@@ -576,6 +580,7 @@ function calcAll(){
 
   const p=s.products[s.active], r=results[s.active];
   const trs=$('herbBody').children;
+  $('herbFoot').innerHTML=`<tr class="tot"><td><strong>本批合計</strong></td><td class="num" style="text-align:left;padding-left:18px"><strong>${fmt(r.gPerBag,4)} g</strong></td><td></td><td></td><td class="num"><strong>${fmt(r.netKg,2)} kg</strong></td><td class="num"><strong>${money(r.costs[2])}</strong></td><td></td></tr>`;
   const prs=$('procBody').children;
   r.rows.forEach((x,i)=>{ const hb=p.herbs[i];
     if(trs[i]){trs[i].querySelector('[data-out=w]').textContent=fmt(x.bk,2)+' kg';
@@ -585,7 +590,7 @@ function calcAll(){
   $('batchNote').textContent=`${p.name}一批 ${fmt(r.bags)} 包，需 ${fmt(r.boxes)} 袋外包裝（每袋 ${fmt(r.perBox)} 包）。`;
   $('n1').textContent=`藥師 ${fmt(n(s.phN))} 人 × ${fmt(n(s.phHr),2)} 小時 × 時薪 ${money(r.hourly)}；總工時 ${fmt(n(s.phN)*n(s.phHr),2)} 小時。`;
   $('n3').textContent=`每包淨重 ${fmt(r.gPerBag,3)} g；本批用量＝每包克數 × ${fmt(r.bags)} 包＝${fmt(r.netKg,2)} kg`+(n(s.loss)>0?`，含損耗 ${fmt(n(s.loss),1)}% 為 ${fmt(r.buyKg,2)} kg。`:'（不計損耗）。')+'藥材單價依各產品分別設定；碎料商、烘碎與加工費請見第 4 項。';
-  $('n4').textContent=`各藥材加工費＝本批用量（克）× 加工費（元／克），合計 ${money(r.feeCost)}。下方欄位為額外的通用費用，未另收可填 0。勾選項目：需粗碎 ${fmt(r.crushKg,2)} kg、需烘 ${fmt(r.roastKg,2)} kg。`;
+  $('n4').textContent=`各藥材加工小計＝本批用量（克）×（烘加工費＋碎加工費）（元／克），合計 ${money(r.feeCost)}。下方欄位為額外的通用費用，未另收可填 0。勾選項目：需粗碎 ${fmt(r.crushKg,2)} kg、需烘 ${fmt(r.roastKg,2)} kg。`;
   $('n6').textContent=s.gMode!=='cap'?'':(s.gShare
     ? `四項合併送照：總重 ${fmt(r.gTotW,2)} kg，每次上限 ${fmt(n(s.gCap))} kg，需照射 ${fmt(r.gRuns)} 次，共 ${money(r.gRuns*(n(s.gFixed)+n(s.gShip)))}。${p.name}重 ${fmt(r.gW,2)} kg，依重量分攤 ${money(r.costs[5])}，每包約 ${money2(r.bags?r.costs[5]/r.bags:0)}。`
     : `${p.name}單獨送照：重 ${fmt(r.gW,2)} kg，每次上限 ${fmt(n(s.gCap))} kg，需照射 ${fmt(r.gRuns)} 次 × ${money(n(s.gFixed)+n(s.gShip))}＝${money(r.costs[5])}，每包約 ${money2(r.bags?r.costs[5]/r.bags:0)}。`);
@@ -671,30 +676,13 @@ $('navAdmin').addEventListener('click',()=>{ if(document.body.classList.contains
 $('navFront').addEventListener('click',()=>{ if(document.body.classList.contains('mode-admin')&&!leaveAdmin()) return; setMode('front'); });
 $('lockBtn').addEventListener('click',()=>{ if(!leaveAdmin()) return; unlocked=false; setMode('front'); });
 $('saveBtn').addEventListener('click',commit);
-async function exportHtml(){
-  if(isDirty()){ if(!confirm('尚有未儲存的變更。\n按「確定」先儲存再匯出；按「取消」則不匯出。')) return; commit(); }
-  if(!PAGE_SRC){ alert('此瀏覽器無法匯出，請改用 Chrome 或 Edge。'); return; }
-  const seed=clone(committed); delete seed.active; seed.seedId='s'+Date.now();
-  const json=JSON.stringify(seed).replace(/</g,'\\u003c').replace(/\*\//g,'*\\/');
-  const html=PAGE_SRC.replace(/\/\*SEED\*\/[\s\S]*?\/\*END\*\//,'/*SEED*/'+json+'/*END*/');
-  const d=new Date(), z=x=>String(x).padStart(2,'0');
-  const filename=`四項茶飲成本計算器_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}.html`;
-  if(window.claude&&typeof claude.use==='function'){
-    try{ const dl=await claude.use('downloads');
-      if(dl){ try{ await dl.save({filename,data:html}); updateDirty('已匯出 HTML（含目前儲存的資料）。'); }
-        catch(e){ if(e&&e.code!=='declined') updateDirty('匯出失敗：'+(e&&e.message||'請稍後再試')); } return; } }catch(e){}
-  }
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})); a.download=filename;
-  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
-  updateDirty('已匯出 HTML（含目前儲存的資料）。');
-}
-$('exportBtn').addEventListener('click',exportHtml);
+
 $('gShare').addEventListener('change',e=>{state.gShare=e.target.checked; save(); calcAll();});
 $('discardBtn').addEventListener('click',()=>{ if(confirm('確定放棄所有未儲存的變更，回到上次儲存的數值？')) discard(); });
 window.addEventListener('beforeunload',e=>{ if(isDirty()){ e.preventDefault(); e.returnValue=''; } });
 setMode(unlocked?'admin':'front');
 load(); committed=clone(state); persist(); bindFields(); $('gShare').checked=!!state.gShare; renderTabs(); renderHerbs(); calcAll(); updateDirty();
-$('addHerb').addEventListener('click',()=>{state.products[state.active].herbs.push({name:'',sup:'',price:'',feeG:0,g:0,roast:false,crush:true}); save(); renderHerbs(); calcAll();
+$('addHerb').addEventListener('click',()=>{state.products[state.active].herbs.push({name:'',sup:'',price:'',feeG:0,crushG:0,g:0,roast:false,crush:true}); save(); renderHerbs(); calcAll();
   const r=$('herbBody').lastElementChild; r&&r.querySelector('input').focus();});
 $('resetBtn').addEventListener('click',()=>{if(!confirm('要將所有欄位（含藥材報價）還原為原始預設值嗎？\n還原後需按「儲存變更」才會套用到成本總覽。'))return;
   const a=state.active; state=structuredClone(DEFAULTS); state.active=a; refreshAll();});

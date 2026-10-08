@@ -159,6 +159,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 #herbFoot td{border-top:2px solid var(--leaf);background:var(--band);padding-top:10px;padding-bottom:10px}
 #herbFoot td:first-child{border-radius:0 0 0 8px}
 #herbFoot td:last-child{border-radius:0 0 8px 0}
+.ro-field{background:var(--band);border-color:transparent;color:var(--ink);font-weight:700;cursor:default}
 @media print{.nav,.adminbar{display:none}aside{position:static}.tools,.row-actions,button.del{display:none}}
 </style>
 </head>
@@ -297,16 +298,26 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   </section>
 
   <section class="item admin-only">
-    <h2><span class="no">5</span>包裝茶包成本<span class="sub" id="s5"></span></h2>
+    <h2><span class="no">5</span>混和成本<span class="sub" id="sMix"></span></h2>
     <div class="fields">
-      <label>茶包袋材料（元／包）<input type="number" id="bagMat" min="0" step="0.01"></label>
+      <label>本批藥材總重<input type="text" id="mixW" readonly tabindex="-1" class="ro-field" aria-readonly="true"></label>
+      <label>混和費用（元／克）<input type="number" id="mixRate" min="0" step="0.001"></label>
+      <label>固定費用（元／批）<input type="number" id="mixFix" min="0" step="1"></label>
+    </div>
+    <p class="note" id="nMix"></p>
+  </section>
+
+  <section class="item admin-only">
+    <h2><span class="no">6</span>包裝茶包成本<span class="sub" id="s5"></span></h2>
+    <div class="fields">
+      <label>茶包袋材料（元／包，含棉線）<input type="number" id="bagMat" min="0" step="0.01"></label>
       <label>充填封口代工（元／包）<input type="number" id="bagLabor" min="0" step="0.01"></label>
       <label>固定費用（元／批）<input type="number" id="bagFix" min="0" step="1"></label>
     </div>
   </section>
 
   <section class="item admin-only">
-    <h2><span class="no">6</span>照射 Gamma<span class="sub" id="s6"></span></h2>
+    <h2><span class="no">7</span>照射 Gamma<span class="sub" id="s6"></span></h2>
     <div class="fields">
       <label>每次照射上限（公斤）<input type="number" id="gCap" min="1" step="1"></label>
       <label>每次照射費用（元）<input type="number" id="gFixed" min="0" step="1"></label>
@@ -318,7 +329,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   </section>
 
   <section class="item admin-only">
-    <h2><span class="no">7</span>外包裝包材（含乾燥劑）<span class="sub" id="s7"></span></h2>
+    <h2><span class="no">8</span>外包裝包材（含乾燥劑）<span class="sub" id="s7"></span></h2>
     <div class="fields">
       <label>外包裝袋單價（元／袋）<input type="number" id="boxPrice" min="0" step="0.1"></label>
       <label>包材損耗率（%）<input type="number" id="boxLoss" min="0" step="0.5"></label>
@@ -329,7 +340,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   </section>
 
   <section class="item admin-only">
-    <h2><span class="no">8</span>外包裝貼紙<span class="sub" id="s8"></span></h2>
+    <h2><span class="no">9</span>外包裝貼紙<span class="sub" id="s8"></span></h2>
     <div class="fields">
       <label>每袋外包裝張數<input type="number" id="stkN" min="0" step="1"></label>
       <label>貼紙單價（元／張）<input type="number" id="stkPrice" min="0" step="0.01"></label>
@@ -389,7 +400,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 </div>
 
 <script id="app">
-const SEED=/*SEED*/{"perBox": 10, "loss": 0, "phN": 2, "phHr": 4, "phRate": 450, "kw": 1.5, "kwHr": 4, "ePrice": 7.43, "water": 0.5, "wPrice": 12, "utilOther": 0, "grindKg": 0, "roastKg": 0, "grindFix": 0, "bagMat": 0.85, "bagLabor": 0, "bagFix": 0, "gMode": "cap", "gCap": 150, "gShare": true, "gKg": 20, "gWeight": "", "gMin": 1500, "gFixed": 5000, "gShip": 0, "boxPrice": 3.5, "boxLoss": 2, "dryN": 1, "dryPrice": 1.2, "stkN": 1, "stkPrice": 1.5, "stkFix": 0, "markup": 30, "priceUnit": "jin", "gMig5000": true, "dryMig": true, "saleMig": true, "lossMig0": true, "gCapMig": true, "products": [{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": false, "crush": true, "price": 2850, "feeG": 0, "crushG": 0.03}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "feeG": 0, "crushG": 0.03}, {"name": "茯苓", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 280, "feeG": 0, "crushG": 0.03}, {"name": "麥門冬", "sup": "吉翔", "g": 0.828, "roast": true, "crush": true, "price": 700, "feeG": 0, "crushG": 0.03}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "feeG": 0, "crushG": 0.03}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "feeG": 0, "crushG": 0.03}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "feeG": 0.08333333333333333}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "feeG": 0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "feeG": 0.1}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "feeG": 0}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "feeG": 0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "feeG": 0.15}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "feeG": 0}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "feeG": 0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "feeG": 0.16666666666666666}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "feeG": 0}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "feeG": 0.1}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "feeG": 0.05}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "feeG": 0}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "feeG": 0}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.05}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "feeG": 0.11666666666666667}]}], "savedAt": 1791433828249, "seedId": "s1791433828249"}/*END*/;
+const SEED=/*SEED*/{"perBox": 10, "loss": 0, "phN": 2, "phHr": 4, "phRate": 450, "kw": 1.5, "kwHr": 4, "ePrice": 7.43, "water": 0.5, "wPrice": 12, "utilOther": 0, "grindKg": 0, "roastKg": 0, "grindFix": 0, "bagMat": 1.25, "bagLabor": 0, "bagFix": 0, "gMode": "cap", "gCap": 150, "gShare": true, "gKg": 20, "gWeight": "", "gMin": 1500, "gFixed": 4000, "gShip": 0, "boxPrice": 3.5, "boxLoss": 2, "dryN": 1, "dryPrice": 1.2, "stkN": 2, "stkPrice": 1.5, "stkFix": 0, "markup": 30, "priceUnit": "jin", "gMig5000": true, "dryMig": true, "saleMig": true, "lossMig0": true, "gCapMig": true, "products": [{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": false, "crush": true, "price": 2850, "feeG": 0, "crushG": 0.03}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "feeG": 0, "crushG": 0.03}, {"name": "茯苓", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 280, "feeG": 0, "crushG": 0.03}, {"name": "麥門冬", "sup": "吉翔", "g": 0.828, "roast": true, "crush": true, "price": 700, "feeG": 0.05, "crushG": 0.03}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "feeG": 0.05, "crushG": 0.03}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "feeG": 0.05, "crushG": 0.03}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "feeG": 0.08333333333333333}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "feeG": 0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "feeG": 0.1}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "feeG": 0}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "feeG": 0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "feeG": 0.15}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "feeG": 0}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "feeG": 0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "feeG": 0.16666666666666666}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "feeG": 0}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "feeG": 0.1}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "feeG": 0.05}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "feeG": 0}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "feeG": 0}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.05}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "feeG": 0.11666666666666667}]}], "savedAt": 1791450958247, "seedId": "s1791450958247", "mixRate": 0.025, "mixFix": 0}/*END*/;
 const PAGE_SRC=(()=>{ try{ const c=document.documentElement.cloneNode(true);
   c.querySelectorAll('script').forEach(s=>{ if(s.id!=='app') s.remove(); });
   return '<!DOCTYPE html>\n'+c.outerHTML; }catch(e){ return ''; } })();
@@ -398,17 +409,19 @@ const DEFAULTS = {
   phN:2, phHr:4, phRate:450,
   kw:1.5, kwHr:4, ePrice:7.43, water:0.5, wPrice:12, utilOther:0,
   grindKg:0, roastKg:0, grindFix:0,
-  bagMat:0.85, bagLabor:0, bagFix:0,
-  gMode:'cap', gCap:150, gShare:true, gKg:20, gWeight:'', gMin:1500, gFixed:5000, gShip:0,
+  bagMat:1.25, bagLabor:0, bagFix:0,
+  gMode:'cap', gCap:150, gShare:true, gKg:20, gWeight:'', gMin:1500, gFixed:4000, gShip:0,
   boxPrice:3.5, boxLoss:2, dryN:1, dryPrice:1.2,
-  stkN:1, stkPrice:1.5, stkFix:0,
+  stkN:2, stkPrice:1.5, stkFix:0,
   markup:30, priceUnit:'jin', active:0,
+  mixRate:0.025, mixFix:0,
   gMig5000:true, dryMig:true, saleMig:true, lossMig0:true, gCapMig:true,
-  products:[{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": false, "crush": true, "price": 2850, "feeG": 0.0, "crushG": 0.03}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "feeG": 0.0, "crushG": 0.03}, {"name": "茯苓", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 280, "feeG": 0.0, "crushG": 0.03}, {"name": "麥門冬", "sup": "吉翔", "g": 0.828, "roast": true, "crush": true, "price": 700, "feeG": 0.0, "crushG": 0.03}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "feeG": 0.0, "crushG": 0.03}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "feeG": 0.0, "crushG": 0.03}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "feeG": 0.08333333333333333}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "feeG": 0.0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "feeG": 0.1}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "feeG": 0.0}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "feeG": 0.0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "feeG": 0.15}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "feeG": 0.0}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "feeG": 0.0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "feeG": 0.16666666666666666}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "feeG": 0.0}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "feeG": 0.1}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "feeG": 0.05}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "feeG": 0.0}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "feeG": 0.0}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.05}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "feeG": 0.11666666666666667}]}]
+  products:[{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": false, "crush": true, "price": 2850, "feeG": 0.0, "crushG": 0.03}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "feeG": 0.0, "crushG": 0.03}, {"name": "茯苓", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 280, "feeG": 0.0, "crushG": 0.03}, {"name": "麥門冬", "sup": "吉翔", "g": 0.828, "roast": true, "crush": true, "price": 700, "feeG": 0.05, "crushG": 0.03}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "feeG": 0.05, "crushG": 0.03}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "feeG": 0.05, "crushG": 0.03}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "feeG": 0.08333333333333333}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "feeG": 0.0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "feeG": 0.1}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "feeG": 0.0}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "feeG": 0.0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "feeG": 0.15}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "feeG": 0.0}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "feeG": 0.0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "feeG": 0.16666666666666666}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "feeG": 0.0}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "feeG": 0.1}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "feeG": 0.05}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "feeG": 0.0}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "feeG": 0.0}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.13333333333333333}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0.05}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "feeG": 0.11666666666666667}]}]
 };
 const KEY='teabag-cost-v4';
-const COLORS=['#2E5A47','#6E9A88','#B5832E','#E3BC72','#5D7D9A','#C77E86','#C4513F','#8A8F45'];
-const NAMES=['藥師人力','水電費','藥材','加工粗碎','包裝茶包','照射 Gamma','外包裝包材','外包裝貼紙'];
+const COLORS=['#2E5A47','#6E9A88','#B5832E','#E3BC72','#7A6A9E','#5D7D9A','#C77E86','#C4513F','#8A8F45'];
+const NAMES=['藥師人力','水電費','藥材','加工粗碎','混和','包裝茶包','照射 Gamma','外包裝包材','外包裝貼紙'];
+const SIDS=['s1','s2','s3','s4','sMix','s5','s6','s7','s8'];
 let state;
 function load(){
   if(SEED){ try{ const cur=JSON.parse(localStorage.getItem(KEY)||'null');
@@ -423,7 +436,7 @@ function load(){
       const keep={}; ['perBox','loss','phN','phHr','phSal','phMonthHr','phOver','kw','kwHr','ePrice','water','wPrice','utilOther','bagMat','bagLabor','bagFix','gMode','gKg','gWeight','gMin','gFixed','gShip','boxPrice','boxLoss','dryN','dryPrice','stkN','stkPrice','stkFix','markup'].forEach(k=>{if(k in v) keep[k]=v[k];});
       const st=Object.assign(structuredClone(DEFAULTS),keep); if(n(st.ePrice)===4.5) st.ePrice=7.43; localStorage.setItem(KEY,JSON.stringify(st));}}}catch(e){}
   try{const s=localStorage.getItem(KEY); if(s){state=Object.assign(structuredClone(DEFAULTS),JSON.parse(s)); state.products.forEach(q=>q.herbs.forEach(x=>{ if(x.feeG===undefined){ x.feeG=n(x.fee)/(state.priceUnit==='kg'?1000:600); delete x.fee; } }));
-  if(!state.lossMig0){state.loss=0; state.lossMig0=true;} if(!state.gCapMig){state.gMode='cap'; state.gCap=150; state.gFixed=5000; state.gCapMig=true;} if(n(state.ePrice)===4.5) state.ePrice=7.43; if(!state.gMig5000){state.gMode='fixed';state.gFixed=5000;if(n(state.gShip)===500)state.gShip=0;state.gMig5000=true;} if(!state.dryMig){state.perBox=10;state.dryN=1;state.dryPrice=1.2;state.dryMig=true;} if(!state.saleMig){state.sale={'酸棗':500,'寬心':450,'荷風':450,'清韻':0};state.saleMig=true;} return;}}catch(e){}
+  if(!state.lossMig0){state.loss=0; state.lossMig0=true;} if(!state.gCapMig){state.gMode='cap'; state.gCap=150; state.gFixed=4000; state.gCapMig=true;} if(n(state.ePrice)===4.5) state.ePrice=7.43; if(!state.gMig5000){state.gMode='fixed';state.gFixed=5000;if(n(state.gShip)===500)state.gShip=0;state.gMig5000=true;} if(!state.dryMig){state.perBox=10;state.dryN=1;state.dryPrice=1.2;state.dryMig=true;} if(!state.saleMig){state.sale={'酸棗':500,'寬心':450,'荷風':450,'清韻':0};state.saleMig=true;} return;}}catch(e){}
   state=structuredClone(DEFAULTS);
 }
 let committed=null;
@@ -536,6 +549,7 @@ function calc(p){
     rows.push({bk,cost,fc});
   });
   const c4=feeCost+crushKg*n(s.grindKg)+roastKg*n(s.roastKg)+n(s.grindFix);
+  const mixKg=Math.ceil(Math.round(netKg*1000)/1000), cMix=mixKg*1000*n(s.mixRate)+n(s.mixFix);
   const c5=bags*(n(s.bagMat)+n(s.bagLabor))+n(s.bagFix);
   const gW=String(s.gWeight).trim()===''?netKg:n(s.gWeight);
   const gBase=gW*n(s.gKg), cap=Math.max(1,n(s.gCap)), perRun=n(s.gFixed)+n(s.gShip);
@@ -548,9 +562,9 @@ function calc(p){
   const dryCost=boxes*n(s.dryN)*n(s.dryPrice);
   const c7=boxQty*n(s.boxPrice)+dryCost;
   const c8=boxes*n(s.stkN)*n(s.stkPrice)+n(s.stkFix);
-  const costs=[c1,c2,c3,c4,c5,c6,c7,c8];
+  const costs=[c1,c2,c3,c4,cMix,c5,c6,c7,c8];
   const total=costs.reduce((a,b)=>a+b,0);
-  return {feeCost,bags,perBox,boxes,hourly,netKg,buyKg,gPerBag,crushKg,roastKg,rows,gW,gBase,gRuns,gTotW,boxQty,dryCost,costs,total,perBag:bags?total/bags:0};
+  return {mixKg,feeCost,bags,perBox,boxes,hourly,netKg,buyKg,gPerBag,crushKg,roastKg,rows,gW,gBase,gRuns,gTotW,boxQty,dryCost,costs,total,perBag:bags?total/bags:0};
 }
 
 const sale=name=>{const p=state.products.find(x=>x.name===name); return p?n(p.sale):0;};
@@ -591,11 +605,13 @@ function calcAll(){
   $('n3').textContent=`每包淨重 ${fmt(r.gPerBag,3)} g；本批用量＝每包克數 × ${fmt(r.bags)} 包＝${fmt(r.netKg,2)} kg`+(n(s.loss)>0?`，含損耗 ${fmt(n(s.loss),1)}% 為 ${fmt(r.buyKg,2)} kg。`:'（不計損耗）。')+'藥材單價依各產品分別設定；碎料商、烘碎與加工費請見第 4 項。';
   $('n4').textContent=`各藥材加工小計＝本批用量（克）×（烘加工費＋碎加工費）（元／克），合計 ${money(r.feeCost)}。下方欄位為額外的通用費用，未另收可填 0。勾選項目：需粗碎 ${fmt(r.crushKg,2)} kg、需烘 ${fmt(r.roastKg,2)} kg。`;
   $('n6').textContent=s.gMode!=='cap'?'':(s.gShare
-    ? `依重量攤提：${p.name}重 ${fmt(r.gW,2)} kg ÷ 每次 ${fmt(n(s.gCap))} kg × ${money(n(s.gFixed)+n(s.gShip))}＝${money(r.costs[5])}（每公斤 ${money2((n(s.gFixed)+n(s.gShip))/Math.max(1,n(s.gCap)))}），每包約 ${money2(r.bags?r.costs[5]/r.bags:0)}。`
-    : `${p.name}單獨送照：重 ${fmt(r.gW,2)} kg，每次上限 ${fmt(n(s.gCap))} kg，需照射 ${fmt(r.gRuns)} 次 × ${money(n(s.gFixed)+n(s.gShip))}＝${money(r.costs[5])}，每包約 ${money2(r.bags?r.costs[5]/r.bags:0)}。`);
+    ? `依重量攤提：${p.name}重 ${fmt(r.gW,2)} kg ÷ 每次 ${fmt(n(s.gCap))} kg × ${money(n(s.gFixed)+n(s.gShip))}＝${money(r.costs[6])}（每公斤 ${money2((n(s.gFixed)+n(s.gShip))/Math.max(1,n(s.gCap)))}），每包約 ${money2(r.bags?r.costs[6]/r.bags:0)}。`
+    : `${p.name}單獨送照：重 ${fmt(r.gW,2)} kg，每次上限 ${fmt(n(s.gCap))} kg，需照射 ${fmt(r.gRuns)} 次 × ${money(n(s.gFixed)+n(s.gShip))}＝${money(r.costs[6])}，每包約 ${money2(r.bags?r.costs[6]/r.bags:0)}。`);
   $('n7').textContent=`含損耗需備 ${fmt(r.boxQty)} 個外包裝袋；每袋放 ${fmt(n(s.dryN))} 包 5 g 食品乾燥劑，本批乾燥劑 ${money(r.dryCost)}，攤到每小包約 ${money2(r.bags?r.dryCost/r.bags:0)}。`;
 
-  r.costs.forEach((c,i)=>$('s'+(i+1)).textContent=money(c));
+  r.costs.forEach((c,i)=>$(SIDS[i]).textContent=money(c));
+  $('mixW').value=`${fmt(r.netKg,2)} kg`;
+  $('nMix').textContent=`本批藥材總重 ${fmt(r.netKg,2)} kg，無條件進位為 ${fmt(r.mixKg)} kg（${fmt(r.mixKg*1000)} g）× $${fmt(n(s.mixRate),3)}／克`+(n(s.mixFix)?` ＋ 固定費 ${money(n(s.mixFix))}`:'')+`＝${money(r.costs[4])}，每包約 ${money2(r.bags?r.costs[4]/r.bags:0)}。`;
   $('sumLabel').innerHTML=`<b>${esc(p.name)}</b>　每包茶包成本`;
   $('perBag').innerHTML=`${fmt(r.perBag,2)}<small>元</small>`;
   $('perBox2').textContent=money2(r.perBag*r.perBox);

@@ -160,6 +160,21 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 #herbFoot td:first-child{border-radius:0 0 0 8px}
 #herbFoot td:last-child{border-radius:0 0 8px 0}
 .ro-field{background:var(--band);border-color:transparent;color:var(--ink);font-weight:700;cursor:default}
+@media (min-width:640px){.one-line{white-space:nowrap}}
+.batchbar{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin:0 0 16px;box-shadow:var(--shadow)}
+.batchbar .bsel{flex-direction:row;align-items:center;gap:10px;font-size:14px;color:var(--ink);font-weight:700}
+.batchbar select{width:auto;min-width:220px;font-weight:700;color:var(--leaf);background:var(--leaf-soft);border-color:transparent}
+.batchbar .bmeta{color:var(--muted);font-size:13px;flex:1;min-width:140px}
+.batchbar .bacts{display:flex;gap:6px;flex-wrap:wrap}
+.batchbar .bacts button{font-size:13px;padding:5px 10px}
+.batchbar .danger{color:#B3432F}
+.lockpill{display:inline-block;background:var(--tea-soft);color:var(--tea);font-weight:700;border-radius:999px;padding:1px 9px;margin-left:6px;font-size:12px}
+#batchCmpBody tr{cursor:pointer}
+#batchCmpBody tr.on td{background:var(--leaf-soft)}
+#batchCmpBody td.bn{font-weight:700;white-space:nowrap}
+#batchCmpBody td small{color:var(--muted);margin-left:4px}
+body.batch-locked.mode-admin main input:not(#batchSel),body.batch-locked.mode-admin main select,body.batch-locked.mode-admin aside .price input{opacity:.6}
+button:disabled{opacity:.45;cursor:default}
 @media print{.nav,.adminbar{display:none}aside{position:static}.tools,.row-actions,button.del{display:none}}
 </style>
 </head>
@@ -182,18 +197,28 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
   <h1><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg>茶包製作成本計算</h1>
   <div class="topbar">
     <p class="front-only" style="color:var(--muted);max-width:60ch">四項中藥茶飲（酸棗眠雲、寬心順氣、荷風拂透、清韻澄意）每批次的成本、售價與毛利總覽。<span class="updated" id="lastSaved" style="display:block"></span></p>
-    <p class="admin-only" style="color:var(--muted);max-width:60ch">後台維護：修改批量、藥材報價與各項費用，按「儲存變更」後更新到成本總覽。資料保存在這台裝置的瀏覽器中。</p>
+    <p class="admin-only" style="color:var(--muted)"><span class="one-line">後台維護：修改批量、藥材報價與各項費用，按「儲存變更」後更新到成本總覽。</span><br>資料保存在這台裝置的瀏覽器中。</p>
     <nav class="nav" aria-label="頁面">
       <button type="button" id="navFront">成本總覽</button>
       <button type="button" id="navAdmin">後台維護</button>
     </nav>
   </div>
 </header>
+<div class="batchbar" role="region" aria-label="批次">
+  <label class="bsel"><span>批次</span><select id="batchSel" aria-label="選擇批次"></select></label>
+  <span class="bmeta" id="batchMeta"></span>
+  <span class="bacts admin-only">
+    <button type="button" id="batchNew">複製為新批次</button>
+    <button type="button" id="batchRename">重新命名</button>
+    <button type="button" id="batchLock">鎖定批次</button>
+    <button type="button" id="batchDel" class="danger">刪除批次</button>
+  </span>
+</div>
 <div class="adminbar admin-only" id="adminbar" role="region" aria-label="後台儲存">
   <span id="saveStatus" aria-live="polite"></span>
   <button type="button" class="save" id="saveBtn">儲存變更</button>
   <button type="button" id="discardBtn">放棄變更</button>
-  <button type="button" id="lockBtn">鎖定並返回總覽</button>
+  <button type="button" id="lockBtn">登出後台</button>
 </div>
 
 <dialog id="pwDlg">
@@ -217,6 +242,14 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
     </table></div>
     <p class="note">點選上方分頁或表格中的產品，可切換下方明細。人力、水電、包裝、Gamma 等費用以每項產品各自一個批次計算。</p>
   </div>
+  <section class="item" id="batchCmpSec">
+    <h2><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg>各批次比較（每包成本／毛利率）</h2>
+    <div class="tablewrap"><table style="min-width:560px">
+      <thead id="batchCmpHead"></thead>
+      <tbody id="batchCmpBody"></tbody>
+    </table></div>
+    <p class="note">點選批次名稱可切換。數字以各批次已儲存的資料計算。</p>
+  </section>
   <section class="item front-only">
     <h2><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg><span id="fItemsTitle">成本項目</span></h2>
     <div class="tablewrap"><table style="min-width:420px">
@@ -401,7 +434,7 @@ dialog .acts .primary{background:var(--leaf);border-color:var(--leaf);color:var(
 </div>
 
 <script id="app">
-const SEED=/*SEED*/{"perBox": 10, "loss": 0, "phN": 2, "phHr": 4, "phRate": 450, "kw": 1.5, "kwHr": 4, "ePrice": 7.43, "water": 0.5, "wPrice": 12, "utilOther": 0, "grindKg": 0, "roastKg": 0, "grindFix": 0, "bagMat": 1.25, "bagLabor": 0, "bagFix": 0, "gMode": "cap", "gCap": 150, "gShare": true, "gKg": 20, "gWeight": "", "gMin": 1500, "gFixed": 4000, "gShip": 0, "boxPrice": 3.5, "boxLoss": 2, "dryN": 1, "dryPrice": 1.2, "stkN": 2, "stkPrice": 1.5, "stkFix": 0, "markup": 30, "priceUnit": "jin", "gMig5000": true, "dryMig": true, "saleMig": true, "lossMig0": true, "gCapMig": true, "products": [{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": true, "crush": true, "price": 2850, "feeG": 0.05, "crushG": 0.03}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "feeG": 0, "crushG": 0.03}, {"name": "茯苓", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 280, "feeG": 0, "crushG": 0.03}, {"name": "麥門冬", "sup": "吉翔", "g": 0.828, "roast": true, "crush": true, "price": 700, "feeG": 0.05, "crushG": 0.03}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "feeG": 0.05, "crushG": 0.03}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "feeG": 0.05, "crushG": 0.03}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "feeG": 0, "crushG": 0.08}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "feeG": 0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "feeG": 0, "crushG": 0.1}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "feeG": 0, "crushG": 0.03}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "feeG": 0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "feeG": 0.15}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "feeG": 0, "crushG": 0.03}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "feeG": 0, "crushG": 0.1333}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "feeG": 0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "feeG": 0, "crushG": 0.1667}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "feeG": 0, "crushG": 0.03}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "feeG": 0, "crushG": 0.1}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "feeG": 0, "crushG": 0.05}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "feeG": 0, "crushG": 0.03}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "feeG": 0.05, "crushG": 0.03}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0, "crushG": 0.1333}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0, "crushG": 0.05}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "feeG": 0, "crushG": 0.1167}]}], "savedAt": 1791508206332, "seedId": "s1791508206332", "mixRate": 0.025, "mixFix": 0}/*END*/;
+const SEED=/*SEED*/{"seedId": "s1791513707597", "savedAt": 1791513707597, "cur": 0, "batches": [{"id": "b1", "name": "第一批（2026.10）", "locked": false, "data": {"perBox": 10, "loss": 0, "phN": 2, "phHr": 4, "phRate": 450, "kw": 1.5, "kwHr": 4, "ePrice": 7.43, "water": 0.5, "wPrice": 12, "utilOther": 0, "grindKg": 0, "roastKg": 0, "grindFix": 0, "bagMat": 1.25, "bagLabor": 0, "bagFix": 0, "gMode": "cap", "gCap": 150, "gShare": true, "gKg": 20, "gWeight": "", "gMin": 1500, "gFixed": 4000, "gShip": 0, "boxPrice": 3.5, "boxLoss": 2, "dryN": 1, "dryPrice": 1.2, "stkN": 2, "stkPrice": 1.5, "stkFix": 0, "markup": 30, "priceUnit": "jin", "gMig5000": true, "dryMig": true, "saleMig": true, "lossMig0": true, "gCapMig": true, "products": [{"name": "酸棗眠雲", "bags": 10000, "sale": 500, "herbs": [{"name": "酸棗仁", "sup": "吉翔", "g": 1.656, "roast": true, "crush": true, "price": 2850, "feeG": 0.05, "crushG": 0.03}, {"name": "百合", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 600, "feeG": 0, "crushG": 0.03}, {"name": "茯苓", "sup": "吉翔", "g": 1.0925, "roast": false, "crush": true, "price": 280, "feeG": 0, "crushG": 0.03}, {"name": "麥門冬", "sup": "吉翔", "g": 0.828, "roast": true, "crush": true, "price": 700, "feeG": 0.05, "crushG": 0.03}, {"name": "龍眼肉", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 270, "feeG": 0.05, "crushG": 0.03}, {"name": "紅棗", "sup": "吉翔", "g": 0.5405, "roast": true, "crush": true, "price": 180, "feeG": 0.05, "crushG": 0.03}]}, {"name": "寬心順氣", "bags": 10000, "sale": 450, "herbs": [{"name": "紫蘇葉", "sup": "宏祥", "g": 0.418, "roast": false, "crush": true, "price": 180, "feeG": 0, "crushG": 0.08}, {"name": "桂花", "sup": "", "g": 0.253, "roast": false, "crush": false, "price": 880, "feeG": 0}, {"name": "山藥", "sup": "宏祥", "g": 1.672, "roast": false, "crush": true, "price": 240, "feeG": 0, "crushG": 0.1}, {"name": "陳皮", "sup": "吉翔", "g": 1.254, "roast": false, "crush": true, "price": 200, "feeG": 0, "crushG": 0.03}, {"name": "麥芽", "sup": "", "g": 1.254, "roast": false, "crush": false, "price": 80, "feeG": 0}, {"name": "佛手", "sup": "宏祥", "g": 0.418, "roast": true, "crush": true, "price": 260, "feeG": 0.15}, {"name": "炙甘草", "sup": "吉翔", "g": 0.231, "roast": false, "crush": true, "price": 347, "feeG": 0, "crushG": 0.03}]}, {"name": "荷風拂透", "bags": 10000, "sale": 450, "herbs": [{"name": "薏仁", "sup": "宏祥", "g": 1.54125, "roast": false, "crush": true, "price": 120, "feeG": 0, "crushG": 0.1333}, {"name": "赤小豆", "sup": "", "g": 1.54125, "roast": false, "crush": false, "price": 120, "feeG": 0}, {"name": "茯苓", "sup": "宏祥", "g": 1.02375, "roast": false, "crush": true, "price": 180, "feeG": 0, "crushG": 0.1667}, {"name": "陳皮", "sup": "吉翔", "g": 0.50625, "roast": false, "crush": true, "price": 200, "feeG": 0, "crushG": 0.03}, {"name": "荷葉", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 130, "feeG": 0, "crushG": 0.1}, {"name": "玉米鬚", "sup": "宏祥", "g": 0.50625, "roast": false, "crush": true, "price": 120, "feeG": 0, "crushG": 0.05}]}, {"name": "清韻澄意", "bags": 2000, "sale": 0, "herbs": [{"name": "天麻", "sup": "吉翔", "g": 1.025, "roast": false, "crush": true, "price": 850, "feeG": 0, "crushG": 0.03}, {"name": "黃精", "sup": "吉翔", "g": 1.5375, "roast": true, "crush": true, "price": 598, "feeG": 0.05, "crushG": 0.03}, {"name": "薏仁", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0, "crushG": 0.1333}, {"name": "薄荷", "sup": "宏祥", "g": 1.025, "roast": false, "crush": true, "price": 120, "feeG": 0, "crushG": 0.05}, {"name": "砂仁", "sup": "宏祥", "g": 0.5125, "roast": false, "crush": true, "price": 250, "feeG": 0, "crushG": 0.1167}]}], "savedAt": 1791508206332, "mixRate": 0.025, "mixFix": 0}}]}/*END*/;
 const PAGE_SRC=(()=>{ try{ const c=document.documentElement.cloneNode(true);
   c.querySelectorAll('script').forEach(s=>{ if(s.id!=='app') s.remove(); });
   return '<!DOCTYPE html>\n'+c.outerHTML; }catch(e){ return ''; } })();
@@ -425,10 +458,10 @@ const NAMES=['藥師人力','水電費','藥材','加工粗碎','混和','包裝
 const SIDS=['s1','s2','s3','s4','sMix','s5','s6','s7','s8'];
 let state;
 function load(){
-  if(SEED){ try{ const cur=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(SEED&&!isBook(SEED)){ try{ const cur=JSON.parse(localStorage.getItem(KEY)||'null');
     // a newly deployed file (different seedId) always replaces data saved in this browser
     if(!cur || cur.seedId!==SEED.seedId) localStorage.setItem(KEY,JSON.stringify(SEED)); }catch(e){} }
-  if(SEED){ try{ if(!localStorage.getItem(KEY)) { state=Object.assign(structuredClone(DEFAULTS),clone(SEED)); return; } }catch(e){ state=Object.assign(structuredClone(DEFAULTS),clone(SEED)); return; } }
+  if(SEED&&!isBook(SEED)){ try{ if(!localStorage.getItem(KEY)) { state=Object.assign(structuredClone(DEFAULTS),clone(SEED)); return; } }catch(e){ state=Object.assign(structuredClone(DEFAULTS),clone(SEED)); return; } }
   try{if(!localStorage.getItem(KEY)){const o3=localStorage.getItem('teabag-cost-v3'); if(o3){const v=JSON.parse(o3);
       const st=structuredClone(DEFAULTS); Object.keys(v).forEach(k=>{if(!['products','prices','fees'].includes(k)) st[k]=v[k];});
       (v.products||[]).forEach(op=>{const np=st.products.find(x=>x.name===op.name); if(np){np.bags=op.bags; np.sale=op.sale;}});
@@ -441,12 +474,28 @@ function load(){
   state=structuredClone(DEFAULTS);
 }
 let committed=null;
+const BKEY='teabag-cost-book-v1';
+let book=null;
+const isBook=o=>o&&Array.isArray(o.batches)&&o.batches.length>0;
+function curBatch(){ return book.batches[book.cur]; }
+function initBook(){
+  let stored=null; try{ stored=JSON.parse(localStorage.getItem(BKEY)||'null'); }catch(e){}
+  if(isBook(SEED) && (!isBook(stored) || stored.seedId!==SEED.seedId)) stored=clone(SEED);
+  if(!isBook(stored)){
+    load();
+    stored={seedId:(SEED&&SEED.seedId)||'', cur:0, batches:[{id:'b'+Date.now(), name:'第一批（2026.10）', locked:false, data:clone(state)}]};
+  }
+  book=stored; book.cur=Math.max(0,Math.min(n(book.cur),book.batches.length-1));
+  state=Object.assign(structuredClone(DEFAULTS),clone(curBatch().data));
+}
+function persistBook(){ try{ localStorage.setItem(BKEY,JSON.stringify(book)); }catch(e){} }
 const clone=o=>JSON.parse(JSON.stringify(o));
-function persist(){ try{localStorage.setItem(KEY,JSON.stringify(committed));}catch(e){} }
+function persist(){ const d=clone(committed); delete d.active; curBatch().data=d; persistBook(); }
 function snap(o){const c=clone(o); delete c.active; delete c.savedAt; return JSON.stringify(c);}
 function isDirty(){ return committed && snap(state)!==snap(committed); }
 function fmtTime(t){ const d=new Date(t), z=x=>String(x).padStart(2,'0'); return `${d.getFullYear()}/${z(d.getMonth()+1)}/${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`; }
 function updateDirty(msg){
+  if(book&&curBatch().locked){ $('adminbar').classList.remove('dirty'); $('saveBtn').disabled=true; $('discardBtn').disabled=true; $('saveStatus').textContent='此批次已鎖定，僅供查看。如需修改，請先「解除鎖定」。'; $('lastSaved').textContent=committed&&committed.savedAt?`資料最後更新：${fmtTime(committed.savedAt)}`:''; return; }
   const d=isDirty();
   $('adminbar').classList.toggle('dirty',d);
   $('saveBtn').disabled=!d; $('discardBtn').disabled=!d;
@@ -455,7 +504,7 @@ function updateDirty(msg){
 }
 function save(){ updateDirty(); }
 function refreshAll(){ FIELDS.forEach(k=>{const el=$(k); if(el) el.value=state[k];}); $('gShare').checked=!!state.gShare; renderTabs(); renderHerbs(); calcAll(); updateDirty(); }
-function commit(){ state.savedAt=Date.now(); committed=clone(state); persist(); updateDirty(`已儲存（${fmtTime(committed.savedAt)}），成本總覽已更新。`); }
+function commit(){ if(book&&curBatch().locked) return; state.savedAt=Date.now(); committed=clone(state); persist(); updateDirty(`已儲存（${fmtTime(committed.savedAt)}），成本總覽已更新。`);  if(book) renderBatchCmp(); }
 function discard(){ const a=state.active; state=clone(committed); state.active=Math.min(a,state.products.length-1); refreshAll(); }
 function leaveAdmin(){
   if(isDirty()){
@@ -659,6 +708,7 @@ function calcAll(){
   } else { ['saleBag','gpBox','gpPct'].forEach(k=>$(k).textContent='—');
     $('gpBatch').textContent='−'+money(r.total);
     $('beNote').textContent=`${p.name}不販售，本批成本 ${money(r.total)} 全數為支出（例如贈品或推廣用），需由其他產品的毛利支應。`; }
+  if(book){ renderBatchCmp(); applyLock(); }
 }
 
 const PW_HASH='f2de49a2f1fe62b32be4b1b0164149e2ccecf2a50614b75beb6b0a9a4820f701';
@@ -673,6 +723,67 @@ function sha256Fallback(str){const b=new TextEncoder().encode(str);const K=[0x42
     H=H.map((v,i)=>(v+[a,bb,c,d,e,f,g,hh][i])>>>0);}
   return H.map(v=>v.toString(16).padStart(8,'0')).join('');}
 async function sha256(str){try{if(window.crypto&&crypto.subtle){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');}}catch(e){} return sha256Fallback(str);}
+function batchLabel(b){ return b.name+(b.locked?'（已鎖定）':''); }
+function renderBatchBar(){
+  const sel=$('batchSel'); sel.innerHTML=book.batches.map((b,i)=>`<option value="${i}">${esc(batchLabel(b))}</option>`).join(''); sel.value=String(book.cur);
+  const b=curBatch();
+  $('batchMeta').innerHTML=`共 ${book.batches.length} 個批次`+(b.locked?'<span class="lockpill">已鎖定，僅供查看</span>':'');
+  $('batchLock').textContent=b.locked?'解除鎖定':'鎖定批次';
+  $('batchDel').disabled=book.batches.length<=1;
+  $('batchRename').disabled=b.locked;
+  document.body.classList.toggle('batch-locked',!!b.locked);
+  applyLock();
+}
+function applyLock(){
+  const lk=!!(book&&curBatch().locked);
+  document.querySelectorAll('main section.admin-only input, main section.admin-only select, main section.admin-only button, #saleIn, #markup, #resetBtn').forEach(el=>{ el.disabled=lk; });
+  if(lk){ $('saveBtn').disabled=true; $('discardBtn').disabled=true; }
+}
+function batchResults(data){
+  const keep=state; state=Object.assign(structuredClone(DEFAULTS),clone(data));
+  try{ return state.products.map(p=>({name:p.name, sale:n(p.sale), r:calc(p)})); } finally { state=keep; }
+}
+function renderBatchCmp(){
+  const names=state.products.map(p=>p.name);
+  $('batchCmpHead').innerHTML='<tr><th>批次</th>'+names.map(nm=>`<th style="text-align:right">${esc(nm)}</th>`).join('')+'</tr>';
+  $('batchCmpBody').innerHTML=book.batches.map((b,i)=>{
+    const res=batchResults(i===book.cur?committed:b.data);
+    return `<tr class="${i===book.cur?'on':''}" data-i="${i}"><td class="bn">${esc(b.name)}${b.locked?' 🔒':''}</td>`+names.map(nm=>{
+      const x=res.find(q=>q.name===nm); if(!x) return '<td class="num">—</td>';
+      const cb=x.r.perBag*x.r.perBox, gm=x.sale?((x.sale-cb)/x.sale*100):null;
+      return `<td class="num">${money2(x.r.perBag)}<small>${gm===null?'不販售':fmt(gm,1)+'%'}</small></td>`; }).join('')+'</tr>';
+  }).join('');
+  $('batchCmpBody').querySelectorAll('tr').forEach(tr=>tr.onclick=()=>switchBatch(+tr.dataset.i));
+}
+function switchBatch(i){
+  if(i===book.cur) return;
+  if(isDirty()){
+    if(confirm('目前批次有未儲存的變更。\n按「確定」儲存後切換；按「取消」可選擇放棄變更。')) commit();
+    else if(confirm('要放棄這些變更並切換批次嗎？')) discard();
+    else { $('batchSel').value=String(book.cur); return; }
+  }
+  const a=state.active||0; book.cur=i; persistBook();
+  state=Object.assign(structuredClone(DEFAULTS),clone(curBatch().data)); state.active=Math.min(a,state.products.length-1);
+  committed=clone(state); refreshAll(); renderBatchBar();
+}
+function defaultBatchName(){ const d=new Date(), k=book.batches.length+1, cn='一二三四五六七八九十'; return `第${k<=10?cn[k-1]:k}批（${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}）`; }
+$('batchSel').addEventListener('change',e=>switchBatch(+e.target.value));
+$('batchNew').addEventListener('click',()=>{
+  if(isDirty()){ if(!confirm('目前批次有未儲存的變更，要先儲存再複製嗎？')) return; commit(); }
+  const nm=prompt(`以「${curBatch().name}」的數字建立新批次，請輸入名稱：`,defaultBatchName()); if(nm===null||!nm.trim()) return;
+  const d=clone(committed); delete d.active; d.savedAt=Date.now();
+  book.batches.push({id:'b'+Date.now(), name:nm.trim(), locked:false, data:d}); persistBook(); switchBatch(book.batches.length-1);
+  updateDirty(`已建立新批次「${nm.trim()}」，可直接修改後按「儲存變更」。`);
+});
+$('batchRename').addEventListener('click',()=>{ const b=curBatch(); const nm=prompt('批次名稱：',b.name); if(nm===null||!nm.trim()) return; b.name=nm.trim(); persistBook(); renderBatchBar(); renderBatchCmp(); });
+$('batchLock').addEventListener('click',()=>{ const b=curBatch();
+  if(!b.locked && isDirty()){ if(!confirm('鎖定前要先儲存目前的變更嗎？')) return; commit(); }
+  b.locked=!b.locked; persistBook(); renderBatchBar(); renderBatchCmp(); updateDirty(); });
+$('batchDel').addEventListener('click',()=>{ if(book.batches.length<=1) return; const b=curBatch();
+  if(b.locked){ alert('此批次已鎖定，請先解除鎖定再刪除。'); return; }
+  if(!confirm(`確定要刪除「${b.name}」嗎？此動作無法復原。`)) return;
+  book.batches.splice(book.cur,1); book.cur=Math.max(0,book.cur-1); persistBook();
+  state=Object.assign(structuredClone(DEFAULTS),clone(curBatch().data)); committed=clone(state); refreshAll(); renderBatchBar(); });
 function setMode(mode){
   document.body.className='mode-'+mode;
   $('navFront').setAttribute('aria-current',mode==='front'?'page':'false');
@@ -697,7 +808,7 @@ $('gShare').addEventListener('change',e=>{state.gShare=e.target.checked; save();
 $('discardBtn').addEventListener('click',()=>{ if(confirm('確定放棄所有未儲存的變更，回到上次儲存的數值？')) discard(); });
 window.addEventListener('beforeunload',e=>{ if(isDirty()){ e.preventDefault(); e.returnValue=''; } });
 setMode(unlocked?'admin':'front');
-load(); committed=clone(state); persist(); bindFields(); $('gShare').checked=!!state.gShare; renderTabs(); renderHerbs(); calcAll(); updateDirty();
+initBook(); committed=clone(state); persist(); renderBatchBar(); bindFields(); $('gShare').checked=!!state.gShare; renderTabs(); renderHerbs(); calcAll(); updateDirty();
 $('addHerb').addEventListener('click',()=>{state.products[state.active].herbs.push({name:'',sup:'',price:'',feeG:0,crushG:0,g:0,roast:false,crush:true}); save(); renderHerbs(); calcAll();
   const r=$('herbBody').lastElementChild; r&&r.querySelector('input').focus();});
 $('resetBtn').addEventListener('click',()=>{if(!confirm('要將所有欄位（含藥材報價）還原為原始預設值嗎？\n還原後需按「儲存變更」才會套用到成本總覽。'))return;
